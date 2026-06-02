@@ -21,6 +21,8 @@
 *!   msize(string)      marker size (default medium)
 *!   mlabsize(string)   label size (default small)
 *!   range(# #)         axis range for both axes (default 0 100)
+*!   panel(varname)     facet: draw one quadrant per level and combine them
+*!   cols(#)            number of columns when faceting (default: auto)
 *!   xtitle ytitle title(string)
 *!   legend(string)     "on" (default) / "off"
 *!   saving(string) name(string)
@@ -33,13 +35,121 @@ program define quadrant
           PALette(string) MSize(string) MLABSize(string) ///
           XRANGE(numlist min=2 max=2) YRANGE(numlist min=2 max=2) ///
           RANGE(numlist min=2 max=2) LEGPOS(integer 6) ///
+          PANel(varname) COLs(integer 0) ///
           title(string asis) XTITle(string asis) YTITle(string asis) ///
-          Legend(string) saving(string) name(string) ]
+          Legend(string) saving(string) name(string) NODRAW ]
 
     gettoken yv xv : varlist
+
+    * =====================================================
+    * PANEL MODE: draw one quadrant per level of panel()
+    * and combine them into a single faceted graph.
+    * =====================================================
+    if "`panel'" != "" {
+        if "`name'"=="" local name "quadrant"
+        tempvar ptouse
+        marksample ptouse, novarlist
+        markout `ptouse' `xv'
+        if "`by'"!=""     markout `ptouse' `by', strok
+        markout `ptouse' `panel', strok
+        quietly levelsof `panel' if `ptouse', local(plevs)
+        local np : word count `plevs'
+        capture confirm string variable `panel'
+        local pstr = (_rc==0)
+        if `cols'==0 {
+            if `np'<=2 local cols = `np'
+            else if `np'<=4 local cols = 2
+            else local cols = 3
+        }
+        * a single shared legend (at the bottom) is drawn once for the whole
+        * figure whenever points are grouped; the sub-plots themselves carry
+        * no legend so the panels stay clean.
+        local sharedleg = ("`by'"!="" & "`legend'"!="off")
+
+        * collect passthrough options
+        local opts `"xline(`xline') yline(`yline') legpos(`legpos') `meanlines' `focus' `overall'"'
+        if "`by'"!=""       local opts `"`opts' by(`by')"'
+        if "`mlabel'"!=""   local opts `"`opts' mlabel(`mlabel')"'
+        if `"`hollow'"'!="" local opts `"`opts' hollow(`"`hollow'"')"'
+        if "`msize'"!=""    local opts `"`opts' msize(`msize')"'
+        if "`mlabsize'"!="" local opts `"`opts' mlabsize(`mlabsize')"'
+        if "`palette'"!=""  local opts `"`opts' palette(`"`palette'"')"'
+        if "`range'"!=""    local opts `"`opts' range(`range')"'
+        if "`xrange'"!=""   local opts `"`opts' xrange(`xrange')"'
+        if "`yrange'"!=""   local opts `"`opts' yrange(`yrange')"'
+        if `"`xtitle'"'!="" local opts `"`opts' xtitle(`"`xtitle'"')"'
+        if `"`ytitle'"'!="" local opts `"`opts' ytitle(`"`ytitle'"')"'
+        * suppress per-panel legends when we will draw one shared legend
+        if `sharedleg'                local opts `"`opts' legend(off)"'
+        else if `"`legend'"'!=""      local opts `"`opts' legend(`"`legend'"')"'
+
+        local subnames ""
+        local j = 0
+        foreach pl of local plevs {
+            local ++j
+            if `pstr' {
+                local pcond `"`panel'=="`pl'""'
+                local plab "`pl'"
+            }
+            else {
+                local pcond `"`panel'==`pl'"'
+                local plab : label (`panel') `pl'
+                if `"`plab'"'=="" local plab "`pl'"
+            }
+            local sub`j' "_qd_panel`j'"
+            quadrant `yv' `xv' if `pcond' & `ptouse', `opts' ///
+                title("`plab'") name(`sub`j'') nodraw
+            local subnames `subnames' `sub`j''
+        }
+
+        if `sharedleg' {
+            * build a legend-only graph (no visible markers) and attach it as a
+            * thin strip beneath the grid via a second graph combine.
+            local lpal "`palette'"
+            if "`lpal'"=="" local lpal "blue forest_green orange gs8 cranberry navy purple teal"
+            capture confirm string variable `by'
+            local bystr = (_rc==0)
+            quietly levelsof `by' if `ptouse', local(glv)
+            local lplot ""
+            local lord ""
+            local ii = 0
+            foreach g of local glv {
+                local ++ii
+                local lc : word `ii' of `lpal'
+                if `bystr' local glab "`g'"
+                else {
+                    local glab : label (`by') `g'
+                    if `"`glab'"'=="" local glab "`g'"
+                }
+                local lplot `"`lplot' (scatteri . ., msymbol(O) mcolor(`lc')) "'
+                local lord `lord' `ii' `"`glab'"'
+            }
+            twoway `lplot' ///
+                , legend(order(`lord') rows(1) position(6)) ///
+                  xscale(off) yscale(off) ///
+                  graphregion(color(white)) plotregion(color(white) margin(zero)) ///
+                  fysize(14) name(_qd_legend, replace) nodraw
+            graph combine `subnames', cols(`cols') ///
+                graphregion(color(white)) name(_qd_grid, replace) nodraw
+            graph combine _qd_grid _qd_legend, cols(1) imargin(zero) ///
+                `=cond(`"`title'"'=="","",`"title(`"`title'"')"')' ///
+                graphregion(color(white)) name(`name', replace) `nodraw'
+        }
+        else {
+            graph combine `subnames', cols(`cols') ///
+                `=cond(`"`title'"'=="","",`"title(`"`title'"')"')' ///
+                graphregion(color(white)) name(`name', replace) `nodraw'
+        }
+        if `"`saving'"' != "" {
+            quietly graph export `"`saving'"', replace width(2600)
+            di as result "saved: `saving'"
+        }
+        exit
+    }
+
     marksample touse
     markout `touse' `xv'
-    if "`by'"!="" markout `touse' `by'
+    if "`by'"!="" markout `touse' `by', strok
 
     if "`msize'"==""    local msize "medium"
     if "`mlabsize'"=="" local mlabsize "small"
@@ -161,20 +271,29 @@ program define quadrant
         local legend "off"
     }
     else {
+        capture confirm string variable `by'
+        local bystr = (_rc==0)
         quietly levelsof `by' if `touse', local(glevs)
         foreach g of local glevs {
             local ++i
             local col : word `i' of `palette'
-            local glab : label (`by') `g'
-            if `"`glab'"'=="" local glab "`g'"
+            if `bystr' {
+                local gcond `"`by'=="`g'""'
+                local glab "`g'"
+            }
+            else {
+                local gcond `"`by'==`g'"'
+                local glab : label (`by') `g'
+                if `"`glab'"'=="" local glab "`g'"
+            }
             if `hasH' {
-                local plot `"`plot' (scatter `yv' `xv' if `touse' & `by'==`g' & !(`hcond'), msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & !(`hcond'), msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
                 local n1 = `=2*`i'-1'
-                local plot `"`plot' (scatter `yv' `xv' if `touse' & `by'==`g' & `hcond', msymbol(Oh) mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & `hcond', msymbol(Oh) mcolor(`col') `mlab' mlabcolor(`col')) "'
                 local legord `legord' `n1' `"`glab'"'
             }
             else {
-                local plot `"`plot' (scatter `yv' `xv' if `touse' & `by'==`g', msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond', msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
                 local legord `legord' `i' `"`glab'"'
             }
         }
@@ -194,11 +313,26 @@ program define quadrant
     if "`legend'"=="off" local legopt "legend(off)"
     else local legopt `"legend(order(`legord') rows(1) position(`legpos'))"'
 
-    * tidy axis label step for each axis (round to a nice integer step)
+    * tidy axis label step for each axis: aim for ~5 intervals and snap to a
+    * "nice" number (1, 2, 5 x 10^k) so the axes stay clean and uncluttered.
     local xspan = `xhi' - `xlo'
     local yspan = `yhi' - `ylo'
-    local xstep = max(1, round(`xspan'/10))
-    local ystep = max(1, round(`yspan'/10))
+    foreach ax in x y {
+        local sp = ``ax'span'
+        if `sp' <= 0 {
+            local `ax'step = 1
+        }
+        else {
+            local raw = `sp'/5
+            local mag = 10^(floor(log10(`raw')))
+            local nrm = `raw'/`mag'
+            if `nrm' < 1.5      local nice = 1
+            else if `nrm' < 3   local nice = 2
+            else if `nrm' < 7   local nice = 5
+            else                local nice = 10
+            local `ax'step = `nice'*`mag'
+        }
+    }
     * snap focused bounds to the step grid so labels are tidy integers
     if "`focus'"!="" {
         local xlo = floor(`xlo'/`xstep')*`xstep'
@@ -224,7 +358,7 @@ program define quadrant
           `=cond(`"`title'"'=="","",`"title(`"`title'"')"')' ///
           `legopt' ///
           graphregion(color(white)) plotregion(color(white) margin(small)) ///
-          `aspopt' name(`name', replace)
+          `aspopt' name(`name', replace) `nodraw'
 
     if `"`saving'"' != "" {
         quietly graph export `"`saving'"', replace width(2200)

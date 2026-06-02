@@ -56,6 +56,24 @@ quadrant support nimby, by(pid) mlabel(energy) hollow("Nuclear")
 quadrant support nimby, by(pid) overall mlabel(energy) hollow("Nuclear")
 ```
 
+## Faceting with `panel()`
+
+Draw one quadrant per level of another variable and combine them — ideal for
+comparing the same positioning map across blocs, sources, time points, etc.
+When the points are grouped with `by()`, the faceted figure gets a **single
+shared legend** at the bottom (6 o'clock) instead of one legend per panel.
+
+```stata
+* one quadrant per party, points labelled by energy source
+* (focus zooms each panel to its own data so points are easy to read)
+quadrant support nimby, panel(party) mlabel(energy) meanlines focus
+
+* faceted and grouped: one quadrant per energy source, coloured by party
+quadrant support nimby, panel(energy) by(party) range(30 90)
+```
+
+![panel example](example_panel_group.png)
+
 ## Syntax
 
 ```
@@ -71,6 +89,8 @@ quadrant yvar xvar [if] [in] [, options]
 | `xline(#)` `yline(#)` | reference cross position | 50 / 50 |
 | `meanlines` | put the cross at the data means | off |
 | `focus` | auto-zoom axes to the data (tidy ticks) | off |
+| `panel(varname)` | facet: one quadrant per level, combined | — |
+| `cols(#)` | columns when faceting | auto |
 | `range(# #)` | axis range (both axes) | 0 100 |
 | `xrange(# #)` `yrange(# #)` | set each axis range separately | — |
 | `legpos(#)` | legend position (6 = bottom) | 6 |

@@ -42,6 +42,10 @@
 {synopt:{opt xrange(# #)} {opt yrange(# #)}}set each axis range separately{p_end}
 {synopt:{opt legpos(#)}}legend position clock value; default {cmd:6} (bottom){p_end}
 
+{syntab:Faceting}
+{synopt:{opth panel(varname)}}draw one quadrant per level of this variable and combine them{p_end}
+{synopt:{opt cols(#)}}number of columns when faceting (default: auto){p_end}
+
 {syntab:Axes and titles}
 {synopt:{opt range(# #)}}axis range for both axes; default {cmd:0 100}{p_end}
 {synopt:{opt palette(string)}}colors, one per group{p_end}
@@ -85,6 +89,11 @@ points whose label equals that value with a hollow marker.
 {phang}{opt xline(#)} / {opt yline(#)} set the reference cross (default 50/50);
 {opt meanlines} places it at the means of x and y.
 
+{phang}{opth panel(varname)} draws one quadrant per level of the panel variable
+and combines them into a single faceted graph; {opt cols(#)} sets the number of
+columns (default: auto). All other options (including {opt by()}, {opt mlabel()},
+{opt meanlines}, {opt range()}) apply within each panel.
+
 {phang}{opt range(# #)}, {opt palette()}, {opt msize()}, {opt mlabsize()},
 {opt title()}, {opt xtitle()}, {opt ytitle()}, {opt legend()}, {opt saving()},
 {opt name()} control appearance and output.
@@ -107,6 +116,12 @@ points whose label equals that value with a hollow marker.
 
 {pstd}Reference cross at the data means{p_end}
 {phang2}{cmd:. quadrant support nimby, by(pid) meanlines}{p_end}
+
+{pstd}Faceted: one quadrant per party, points labelled by energy source{p_end}
+{phang2}{cmd:. quadrant support nimby, panel(party) mlabel(energy) meanlines}{p_end}
+
+{pstd}Faceted and grouped: one quadrant per energy source, coloured by party{p_end}
+{phang2}{cmd:. quadrant support nimby, panel(energy) by(party) range(40 90)}{p_end}
 
 
 {marker author}{...}

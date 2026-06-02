@@ -26,4 +26,12 @@ quadrant support nimby, by(pid) meanlines
 quadrant support nimby, by(pid) mlabel(energy) hollow("Nuclear") ///
     xline(40) yline(60) saving("quadrant_demo.png")
 
+* 6) Faceting: one quadrant per party, labelled by energy source
+*    focus zooms each panel to its own data so the points are easy to read
+quadrant support nimby, panel(party) mlabel(energy) meanlines focus
+
+* 7) Faceting + grouping: one quadrant per energy source, coloured by party.
+*    Grouped panels get a single shared legend at the bottom (6 o'clock).
+quadrant support nimby, panel(energy) by(party) range(30 90)
+
 display as result "quadrant tutorial finished — see help quadrant."
