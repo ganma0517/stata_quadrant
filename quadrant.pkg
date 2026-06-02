@@ -1,0 +1,16 @@
+v 3
+d quadrant: Quadrant scatter plot with a central cross of reference lines
+d
+d Points coloured by group with a four-quadrant reference cross, optional
+d point labels, a hollow category, and an optional pooled "overall" overlay.
+d
+d Requires: Stata 16 or newer.
+d
+d Author: Wen-Cheng Lin, Academia Sinica
+d Source: https://github.com/ganma0517/stata_quadrant
+d
+d Distribution-Date: 20260602
+d
+f quadrant.ado
+f quadrant.sthlp
+f quadrant_demo.dta

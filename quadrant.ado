@@ -1,0 +1,231 @@
+*! quadrant v1.0  2Jun2026
+*! Quadrant (scatter) plot: points coloured by group, with a central
+*! cross of reference lines splitting the plane into four quadrants,
+*! optional point labels, and an optional "hollow" category.
+*!
+*! Syntax:
+*!   quadrant yvar xvar [if] [in] [ , options ]
+*!
+*! Options:
+*!   by(varname)        colour points by this group; adds a legend
+*!   overall            also plot the overall (ungrouped) mean point set
+*!                      (only with by(); drawn in black)
+*!   mlabel(varname)    text label for each point
+*!   hollow(string)     value of mlabel() drawn with a hollow marker
+*!                      (e.g. hollow("Nuclear"))
+*!   xline(#)           vertical reference line (default 50)
+*!   yline(#)           horizontal reference line (default 50)
+*!   meanlines          put the reference cross at the means of x and y
+*!                      instead of xline()/yline()
+*!   palette(string)    space-separated colors, one per group
+*!   msize(string)      marker size (default medium)
+*!   mlabsize(string)   label size (default small)
+*!   range(# #)         axis range for both axes (default 0 100)
+*!   xtitle ytitle title(string)
+*!   legend(string)     "on" (default) / "off"
+*!   saving(string) name(string)
+
+program define quadrant
+    version 16.0
+    syntax varlist(min=2 max=2 numeric) [if] [in] , ///
+        [ by(varname) OVERALL MLABel(varname) HOLLOW(string) ///
+          XLINE(real 50) YLINE(real 50) MEANlines FOCus ///
+          PALette(string) MSize(string) MLABSize(string) ///
+          XRANGE(numlist min=2 max=2) YRANGE(numlist min=2 max=2) ///
+          RANGE(numlist min=2 max=2) LEGPOS(integer 6) ///
+          title(string asis) XTITle(string asis) YTITle(string asis) ///
+          Legend(string) saving(string) name(string) ]
+
+    gettoken yv xv : varlist
+    marksample touse
+    markout `touse' `xv'
+    if "`by'"!="" markout `touse' `by'
+
+    if "`msize'"==""    local msize "medium"
+    if "`mlabsize'"=="" local mlabsize "small"
+    if "`name'"==""     local name "quadrant"
+    if "`legend'"==""   local legend "on"
+    if `"`xtitle'"'=="" {
+        local xtl : variable label `xv'
+        if `"`xtl'"'=="" local xtl "`xv'"
+        local xtitle `"`xtl'"'
+    }
+    if `"`ytitle'"'=="" {
+        local ytl : variable label `yv'
+        if `"`ytl'"'=="" local ytl "`yv'"
+        local ytitle `"`ytl'"'
+    }
+    foreach t in title xtitle ytitle {
+        local tv `"``t''"'
+        if substr(`"`tv'"',1,1)==`"""' & substr(`"`tv'"',-1,1)==`"""' {
+            local `t' = substr(`"`tv'"',2,length(`"`tv'"')-2)
+        }
+    }
+    * axis ranges (x and y can differ). Priority:
+    *   xrange()/yrange() > range() (both axes) > focus (auto) > default 0..100
+    * default
+    local xlo 0
+    local xhi 100
+    local ylo 0
+    local yhi 100
+    * focus: zoom to the data with a small pad
+    if "`focus'"!="" {
+        quietly summarize `xv' if `touse', meanonly
+        local xpad = (r(max)-r(min))*0.10
+        if `xpad'==0 local xpad 1
+        local xlo = r(min) - `xpad'
+        local xhi = r(max) + `xpad'
+        quietly summarize `yv' if `touse', meanonly
+        local ypad = (r(max)-r(min))*0.10
+        if `ypad'==0 local ypad 1
+        local ylo = r(min) - `ypad'
+        local yhi = r(max) + `ypad'
+    }
+    * range() sets both axes
+    if "`range'"!="" {
+        local xlo : word 1 of `range'
+        local xhi : word 2 of `range'
+        local ylo `xlo'
+        local yhi `xhi'
+    }
+    * xrange()/yrange() override their axis
+    if "`xrange'"!="" {
+        local xlo : word 1 of `xrange'
+        local xhi : word 2 of `xrange'
+    }
+    if "`yrange'"!="" {
+        local ylo : word 1 of `yrange'
+        local yhi : word 2 of `yrange'
+    }
+
+    * reference-line positions
+    if "`meanlines'"!="" {
+        quietly summarize `xv' if `touse', meanonly
+        local xline = r(mean)
+        quietly summarize `yv' if `touse', meanonly
+        local yline = r(mean)
+    }
+
+    * default palette
+    if "`palette'"=="" {
+        local palette "blue forest_green orange gs8 cranberry navy purple teal"
+    }
+
+    * label option for scatters
+    if "`mlabel'"!="" local mlab `"mlabel(`mlabel') mlabsize(`mlabsize')"'
+    else              local mlab ""
+
+    * hollow-match condition (quote the value if mlabel is a string variable)
+    local hasH = ("`mlabel'"!="" & "`hollow'"!="")
+    if `hasH' {
+        capture confirm string variable `mlabel'
+        if !_rc local hcond `"`mlabel'=="`hollow'""'
+        else    local hcond `"`mlabel'==`hollow'"'
+    }
+
+    * overall layer: pooled mean of (y,x) within each mlabel category,
+    * computed once so it overlays as a single black point per category.
+    if "`overall'"!="" & "`by'"!="" {
+        tempvar oy ox otag
+        if "`mlabel'"!="" {
+            quietly egen double `oy' = mean(`yv') if `touse', by(`mlabel')
+            quietly egen double `ox' = mean(`xv') if `touse', by(`mlabel')
+            quietly egen byte `otag' = tag(`mlabel') if `touse'
+        }
+        else {
+            quietly summarize `yv' if `touse', meanonly
+            local oym = r(mean)
+            quietly summarize `xv' if `touse', meanonly
+            local oxm = r(mean)
+            quietly gen double `oy' = `oym' if `touse'
+            quietly gen double `ox' = `oxm' if `touse'
+            quietly gen byte `otag' = (_n==1)
+        }
+    }
+
+    * ---- build scatter layers ----
+    local plot ""
+    local legord ""
+    local i = 0
+
+    if "`by'"=="" {
+        * single colour
+        local col : word 1 of `palette'
+        if `hasH' {
+            local plot `"(scatter `yv' `xv' if `touse' & !(`hcond'), msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
+            local plot `"`plot' (scatter `yv' `xv' if `touse' & `hcond', msymbol(Oh) mcolor(`col') `mlab' mlabcolor(`col')) "'
+        }
+        else {
+            local plot `"(scatter `yv' `xv' if `touse', msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
+        }
+        local legend "off"
+    }
+    else {
+        quietly levelsof `by' if `touse', local(glevs)
+        foreach g of local glevs {
+            local ++i
+            local col : word `i' of `palette'
+            local glab : label (`by') `g'
+            if `"`glab'"'=="" local glab "`g'"
+            if `hasH' {
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `by'==`g' & !(`hcond'), msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local n1 = `=2*`i'-1'
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `by'==`g' & `hcond', msymbol(Oh) mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local legord `legord' `n1' `"`glab'"'
+            }
+            else {
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `by'==`g', msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local legord `legord' `i' `"`glab'"'
+            }
+        }
+        * overall mean layer: one pooled black point per mlabel category
+        if "`overall'"!="" {
+            if `hasH' {
+                local plot `"`plot' (scatter `oy' `ox' if `otag' & !(`hcond'), msymbol(O) mcolor(black) `mlab' mlabcolor(black)) "'
+                local plot `"`plot' (scatter `oy' `ox' if `otag' & `hcond', msymbol(Oh) mcolor(black) `mlab' mlabcolor(black)) "'
+            }
+            else {
+                local plot `"`plot' (scatter `oy' `ox' if `otag', msymbol(O) mcolor(black) `mlab' mlabcolor(black)) "'
+            }
+        }
+    }
+
+    * legend spec — default position 6 (bottom), in one row
+    if "`legend'"=="off" local legopt "legend(off)"
+    else local legopt `"legend(order(`legord') rows(1) position(`legpos'))"'
+
+    * tidy axis label step for each axis (round to a nice integer step)
+    local xspan = `xhi' - `xlo'
+    local yspan = `yhi' - `ylo'
+    local xstep = max(1, round(`xspan'/10))
+    local ystep = max(1, round(`yspan'/10))
+    * snap focused bounds to the step grid so labels are tidy integers
+    if "`focus'"!="" {
+        local xlo = floor(`xlo'/`xstep')*`xstep'
+        local xhi = ceil(`xhi'/`xstep')*`xstep'
+        local ylo = floor(`ylo'/`ystep')*`ystep'
+        local yhi = ceil(`yhi'/`ystep')*`ystep'
+        local xspan = `xhi' - `xlo'
+        local yspan = `yhi' - `ylo'
+    }
+    local xpad2 = `xspan'*0.02
+    local ypad2 = `yspan'*0.02
+
+    twoway `plot' ///
+        , xline(`xline', lcolor(cranberry) lwidth(medium)) ///
+          yline(`yline', lcolor(cranberry) lwidth(medium)) ///
+          xlabel(`xlo'(`xstep')`xhi', grid glcolor(gs13)) ///
+          ylabel(`ylo'(`ystep')`yhi', grid glcolor(gs13) angle(0)) ///
+          xscale(range(`=`xlo'-`xpad2'' `=`xhi'+`xpad2'')) ///
+          yscale(range(`=`ylo'-`ypad2'' `=`yhi'+`ypad2'')) ///
+          xtitle(`"`xtitle'"') ytitle(`"`ytitle'"') ///
+          `=cond(`"`title'"'=="","",`"title(`"`title'"')"')' ///
+          `legopt' ///
+          graphregion(color(white)) plotregion(color(white)) ///
+          aspect(1) name(`name', replace)
+
+    if `"`saving'"' != "" {
+        quietly graph export `"`saving'"', replace width(2200)
+        di as result "saved: `saving'"
+    }
+end
