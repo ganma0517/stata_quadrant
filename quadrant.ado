@@ -68,15 +68,15 @@ program define quadrant
     local xhi 100
     local ylo 0
     local yhi 100
-    * focus: zoom to the data with a small pad
+    * focus: zoom tightly to the data with a small pad
     if "`focus'"!="" {
         quietly summarize `xv' if `touse', meanonly
-        local xpad = (r(max)-r(min))*0.10
+        local xpad = (r(max)-r(min))*0.06
         if `xpad'==0 local xpad 1
         local xlo = r(min) - `xpad'
         local xhi = r(max) + `xpad'
         quietly summarize `yv' if `touse', meanonly
-        local ypad = (r(max)-r(min))*0.10
+        local ypad = (r(max)-r(min))*0.06
         if `ypad'==0 local ypad 1
         local ylo = r(min) - `ypad'
         local yhi = r(max) + `ypad'
@@ -208,21 +208,23 @@ program define quadrant
         local xspan = `xhi' - `xlo'
         local yspan = `yhi' - `ylo'
     }
-    local xpad2 = `xspan'*0.02
-    local ypad2 = `yspan'*0.02
+    * square aspect only on the default 0..100 box; under focus let the plot
+    * fill its region so points are not pushed away from the axes.
+    if "`focus'"=="" & "`range'"=="" & "`xrange'"=="" & "`yrange'"=="" ///
+        local aspopt "aspect(1)"
+    else local aspopt ""
 
     twoway `plot' ///
         , xline(`xline', lcolor(cranberry) lwidth(medium)) ///
           yline(`yline', lcolor(cranberry) lwidth(medium)) ///
           xlabel(`xlo'(`xstep')`xhi', grid glcolor(gs13)) ///
           ylabel(`ylo'(`ystep')`yhi', grid glcolor(gs13) angle(0)) ///
-          xscale(range(`=`xlo'-`xpad2'' `=`xhi'+`xpad2'')) ///
-          yscale(range(`=`ylo'-`ypad2'' `=`yhi'+`ypad2'')) ///
+          xscale(range(`xlo' `xhi')) yscale(range(`ylo' `yhi')) ///
           xtitle(`"`xtitle'"') ytitle(`"`ytitle'"') ///
           `=cond(`"`title'"'=="","",`"title(`"`title'"')"')' ///
           `legopt' ///
-          graphregion(color(white)) plotregion(color(white)) ///
-          aspect(1) name(`name', replace)
+          graphregion(color(white)) plotregion(color(white) margin(small)) ///
+          `aspopt' name(`name', replace)
 
     if `"`saving'"' != "" {
         quietly graph export `"`saving'"', replace width(2200)
