@@ -178,18 +178,22 @@ program define quadrant
     local xhi 100
     local ylo 0
     local yhi 100
-    * focus: zoom tightly to the data with a small pad
+    * focus: zoom tightly to the data with a small pad. When point labels are
+    * shown they sit to the right of each marker, so give the right edge a
+    * little extra room to keep the text from being clipped.
     if "`focus'"!="" {
+        local rpad = 0.06
+        if "`mlabel'"!="" local rpad = 0.16
         quietly summarize `xv' if `touse', meanonly
-        local xpad = (r(max)-r(min))*0.06
-        if `xpad'==0 local xpad 1
-        local xlo = r(min) - `xpad'
-        local xhi = r(max) + `xpad'
+        local xspn = r(max)-r(min)
+        if `xspn'==0 local xspn 1
+        local xlo = r(min) - `xspn'*0.06
+        local xhi = r(max) + `xspn'*`rpad'
         quietly summarize `yv' if `touse', meanonly
-        local ypad = (r(max)-r(min))*0.06
-        if `ypad'==0 local ypad 1
-        local ylo = r(min) - `ypad'
-        local yhi = r(max) + `ypad'
+        local yspn = r(max)-r(min)
+        if `yspn'==0 local yspn 1
+        local ylo = r(min) - `yspn'*0.06
+        local yhi = r(max) + `yspn'*0.06
     }
     * range() sets both axes
     if "`range'"!="" {
@@ -333,15 +337,13 @@ program define quadrant
             local `ax'step = `nice'*`mag'
         }
     }
-    * snap focused bounds to the step grid so labels are tidy integers
-    if "`focus'"!="" {
-        local xlo = floor(`xlo'/`xstep')*`xstep'
-        local xhi = ceil(`xhi'/`xstep')*`xstep'
-        local ylo = floor(`ylo'/`ystep')*`ystep'
-        local yhi = ceil(`yhi'/`ystep')*`ystep'
-        local xspan = `xhi' - `xlo'
-        local yspan = `yhi' - `ylo'
-    }
+    * Keep the axis scale tight to the (padded) data and place tick labels at
+    * nice round positions strictly *inside* that range. This avoids the large
+    * empty margins that result from snapping the whole axis out to the grid.
+    local xlab_lo = ceil(`xlo'/`xstep')*`xstep'
+    local xlab_hi = floor(`xhi'/`xstep')*`xstep'
+    local ylab_lo = ceil(`ylo'/`ystep')*`ystep'
+    local ylab_hi = floor(`yhi'/`ystep')*`ystep'
     * square aspect only on the default 0..100 box; under focus let the plot
     * fill its region so points are not pushed away from the axes.
     if "`focus'"=="" & "`range'"=="" & "`xrange'"=="" & "`yrange'"=="" ///
@@ -351,8 +353,8 @@ program define quadrant
     twoway `plot' ///
         , xline(`xline', lcolor(cranberry) lwidth(medium)) ///
           yline(`yline', lcolor(cranberry) lwidth(medium)) ///
-          xlabel(`xlo'(`xstep')`xhi', grid glcolor(gs13)) ///
-          ylabel(`ylo'(`ystep')`yhi', grid glcolor(gs13) angle(0)) ///
+          xlabel(`xlab_lo'(`xstep')`xlab_hi', grid glcolor(gs13)) ///
+          ylabel(`ylab_lo'(`ystep')`ylab_hi', grid glcolor(gs13) angle(0)) ///
           xscale(range(`xlo' `xhi')) yscale(range(`ylo' `yhi')) ///
           xtitle(`"`xtitle'"') ytitle(`"`ytitle'"') ///
           `=cond(`"`title'"'=="","",`"title(`"`title'"')"')' ///
