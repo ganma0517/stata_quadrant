@@ -94,8 +94,13 @@ quadrant yvar xvar [if] [in] [, options]
 | `range(# #)` | axis range (both axes) | 0 100 |
 | `xrange(# #)` `yrange(# #)` | set each axis range separately | — |
 | `legpos(#)` | legend position (6 = bottom) | 6 |
-| `palette()` `msize()` `mlabsize()` | colors / sizes | — |
-| `title()` `xtitle()` `ytitle()` `legend()` | titles / legend | — |
+| `palette()` | colors, one per group | — |
+| `msize()` `msymbol()` | marker size / symbol | medium / `O` |
+| `mlabsize()` | point-label size | small |
+| `title()` `xtitle()` `ytitle()` | titles | — |
+| `titsize()` `xtitsize()` `ytitsize()` | title font sizes | — |
+| `aspect()` | aspect ratio (use `aspect(1)` for square) | off |
+| `legend()` | `on` (default) / `off` | on |
 | `saving()` `name()` | export / window name | — |
 
 See `help quadrant` for full documentation and examples.

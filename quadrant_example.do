@@ -34,4 +34,17 @@ quadrant support nimby, panel(party) mlabel(energy) meanlines focus
 *    Grouped panels get a single shared legend at the bottom (6 o'clock).
 quadrant support nimby, panel(energy) by(party) range(30 90)
 
+* 8) Marker style & size: large diamonds (the hollow category becomes a
+*    hollow diamond automatically). Try also msymbol(S) or msymbol(T).
+quadrant support nimby, by(pid) mlabel(energy) hollow("Nuclear") focus ///
+    msymbol(D) msize(large)
+
+* 9) Bigger title and axis-title fonts; no side gap because aspect is off.
+quadrant support nimby, by(pid) mlabel(energy) focus ///
+    title("Energy positioning") titsize(large) ///
+    xtitle("NIMBY (%)") ytitle("Support (%)") xtitsize(large) ytitsize(large)
+
+* 10) Want a perfectly square quadrant? Add aspect(1).
+quadrant support nimby, by(pid) mlabel(energy) aspect(1)
+
 display as result "quadrant tutorial finished — see help quadrant."

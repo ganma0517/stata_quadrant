@@ -32,6 +32,7 @@
 {synopt:{opth mlabel(varname)}}text label for each point{p_end}
 {synopt:{opt hollow(string)}}value of {opt mlabel()} drawn with a hollow marker{p_end}
 {synopt:{opt msize(string)}}marker size; default {cmd:medium}{p_end}
+{synopt:{opt msymbol(string)}}marker symbol; default {cmd:O} (the hollow category uses the matching outline symbol){p_end}
 {synopt:{opt mlabsize(string)}}label size; default {cmd:small}{p_end}
 
 {syntab:Reference cross}
@@ -51,6 +52,9 @@
 {synopt:{opt palette(string)}}colors, one per group{p_end}
 {synopt:{opt title(string)}}graph title{p_end}
 {synopt:{opt xtitle(string)} {opt ytitle(string)}}axis titles{p_end}
+{synopt:{opt titsize(string)}}main-title font size (e.g. {cmd:large}, {cmd:medium}){p_end}
+{synopt:{opt xtitsize(string)} {opt ytitsize(string)}}axis-title font sizes{p_end}
+{synopt:{opt aspect(string)}}aspect ratio (off by default); use {cmd:aspect(1)} for a square quadrant{p_end}
 {synopt:{opt legend(string)}}{cmd:on} (default) / {cmd:off}{p_end}
 
 {syntab:Saving}
@@ -93,6 +97,14 @@ points whose label equals that value with a hollow marker.
 and combines them into a single faceted graph; {opt cols(#)} sets the number of
 columns (default: auto). All other options (including {opt by()}, {opt mlabel()},
 {opt meanlines}, {opt range()}) apply within each panel.
+
+{phang}{opt msymbol(string)} sets the marker symbol (default {cmd:O}); the
+hollow category automatically uses the matching outline symbol. {opt msize()}
+sets the marker size.
+
+{phang}{opt titsize()}, {opt xtitsize()}, {opt ytitsize()} set the font size of
+the main title and the axis titles. {opt aspect()} is off by default so a title
+leaves no side gaps; pass {opt aspect(1)} for a square quadrant.
 
 {phang}{opt range(# #)}, {opt palette()}, {opt msize()}, {opt mlabsize()},
 {opt title()}, {opt xtitle()}, {opt ytitle()}, {opt legend()}, {opt saving()},

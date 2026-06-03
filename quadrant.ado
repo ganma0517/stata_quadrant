@@ -19,7 +19,10 @@
 *!                      instead of xline()/yline()
 *!   palette(string)    space-separated colors, one per group
 *!   msize(string)      marker size (default medium)
+*!   msymbol(string)    marker symbol (default O; hollow uses outline variant)
 *!   mlabsize(string)   label size (default small)
+*!   titsize/xtitsize/ytitsize  font sizes for the title and axis titles
+*!   aspect(string)     aspect ratio (off by default; aspect(1) = square)
 *!   range(# #)         axis range for both axes (default 0 100)
 *!   panel(varname)     facet: draw one quadrant per level and combine them
 *!   cols(#)            number of columns when faceting (default: auto)
@@ -32,11 +35,12 @@ program define quadrant
     syntax varlist(min=2 max=2 numeric) [if] [in] , ///
         [ by(varname) OVERALL MLABel(varname) HOLLOW(string) ///
           XLINE(real 50) YLINE(real 50) MEANlines FOCus ///
-          PALette(string) MSize(string) MLABSize(string) ///
+          PALette(string) MSize(string) MSYMbol(string) MLABSize(string) ///
           XRANGE(numlist min=2 max=2) YRANGE(numlist min=2 max=2) ///
-          RANGE(numlist min=2 max=2) LEGPOS(integer 6) ///
+          RANGE(numlist min=2 max=2) LEGPOS(integer 6) ASPect(string) ///
           PANel(varname) COLs(integer 0) ///
           title(string asis) XTITle(string asis) YTITle(string asis) ///
+          TITSize(string) XTITSize(string) YTITSize(string) ///
           Legend(string) saving(string) name(string) NODRAW ]
 
     gettoken yv xv : varlist
@@ -72,13 +76,18 @@ program define quadrant
         if "`mlabel'"!=""   local opts `"`opts' mlabel(`mlabel')"'
         if `"`hollow'"'!="" local opts `"`opts' hollow(`"`hollow'"')"'
         if "`msize'"!=""    local opts `"`opts' msize(`msize')"'
+        if "`msymbol'"!=""  local opts `"`opts' msymbol(`msymbol')"'
         if "`mlabsize'"!="" local opts `"`opts' mlabsize(`mlabsize')"'
+        if "`aspect'"!=""   local opts `"`opts' aspect(`aspect')"'
         if "`palette'"!=""  local opts `"`opts' palette(`"`palette'"')"'
         if "`range'"!=""    local opts `"`opts' range(`range')"'
         if "`xrange'"!=""   local opts `"`opts' xrange(`xrange')"'
         if "`yrange'"!=""   local opts `"`opts' yrange(`yrange')"'
         if `"`xtitle'"'!="" local opts `"`opts' xtitle(`"`xtitle'"')"'
         if `"`ytitle'"'!="" local opts `"`opts' ytitle(`"`ytitle'"')"'
+        if "`xtitsize'"!="" local opts `"`opts' xtitsize(`xtitsize')"'
+        if "`ytitsize'"!="" local opts `"`opts' ytitsize(`ytitsize')"'
+        if "`titsize'"!=""  local opts `"`opts' titsize(`titsize')"'
         * suppress per-panel legends when we will draw one shared legend
         if `sharedleg'                local opts `"`opts' legend(off)"'
         else if `"`legend'"'!=""      local opts `"`opts' legend(`"`legend'"')"'
@@ -152,9 +161,13 @@ program define quadrant
     if "`by'"!="" markout `touse' `by', strok
 
     if "`msize'"==""    local msize "medium"
+    if "`msymbol'"==""  local msymbol "O"
     if "`mlabsize'"=="" local mlabsize "small"
     if "`name'"==""     local name "quadrant"
     if "`legend'"==""   local legend "on"
+    * hollow variant of the chosen marker (O->Oh, D->Dh, S->Sh, T->Th, ...)
+    if substr("`msymbol'", -1, 1)=="h" local hsym "`msymbol'"
+    else                               local hsym "`msymbol'h"
     if `"`xtitle'"'=="" {
         local xtl : variable label `xv'
         if `"`xtl'"'=="" local xtl "`xv'"
@@ -266,11 +279,11 @@ program define quadrant
         * single colour
         local col : word 1 of `palette'
         if `hasH' {
-            local plot `"(scatter `yv' `xv' if `touse' & !(`hcond'), msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
-            local plot `"`plot' (scatter `yv' `xv' if `touse' & `hcond', msymbol(Oh) mcolor(`col') `mlab' mlabcolor(`col')) "'
+            local plot `"(scatter `yv' `xv' if `touse' & !(`hcond'), msymbol(`msymbol') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
+            local plot `"`plot' (scatter `yv' `xv' if `touse' & `hcond', msymbol(`hsym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
         }
         else {
-            local plot `"(scatter `yv' `xv' if `touse', msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
+            local plot `"(scatter `yv' `xv' if `touse', msymbol(`msymbol') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
         }
         local legend "off"
     }
@@ -291,24 +304,24 @@ program define quadrant
                 if `"`glab'"'=="" local glab "`g'"
             }
             if `hasH' {
-                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & !(`hcond'), msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & !(`hcond'), msymbol(`msymbol') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
                 local n1 = `=2*`i'-1'
-                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & `hcond', msymbol(Oh) mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & `hcond', msymbol(`hsym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
                 local legord `legord' `n1' `"`glab'"'
             }
             else {
-                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond', msymbol(O) mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond', msymbol(`msymbol') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
                 local legord `legord' `i' `"`glab'"'
             }
         }
         * overall mean layer: one pooled black point per mlabel category
         if "`overall'"!="" {
             if `hasH' {
-                local plot `"`plot' (scatter `oy' `ox' if `otag' & !(`hcond'), msymbol(O) mcolor(black) `mlab' mlabcolor(black)) "'
-                local plot `"`plot' (scatter `oy' `ox' if `otag' & `hcond', msymbol(Oh) mcolor(black) `mlab' mlabcolor(black)) "'
+                local plot `"`plot' (scatter `oy' `ox' if `otag' & !(`hcond'), msymbol(`msymbol') msize(`msize') mcolor(black) `mlab' mlabcolor(black)) "'
+                local plot `"`plot' (scatter `oy' `ox' if `otag' & `hcond', msymbol(`hsym') msize(`msize') mcolor(black) `mlab' mlabcolor(black)) "'
             }
             else {
-                local plot `"`plot' (scatter `oy' `ox' if `otag', msymbol(O) mcolor(black) `mlab' mlabcolor(black)) "'
+                local plot `"`plot' (scatter `oy' `ox' if `otag', msymbol(`msymbol') msize(`msize') mcolor(black) `mlab' mlabcolor(black)) "'
             }
         }
     }
@@ -344,11 +357,19 @@ program define quadrant
     local xlab_hi = floor(`xhi'/`xstep')*`xstep'
     local ylab_lo = ceil(`ylo'/`ystep')*`ystep'
     local ylab_hi = floor(`yhi'/`ystep')*`ystep'
-    * square aspect only on the default 0..100 box; under focus let the plot
-    * fill its region so points are not pushed away from the axes.
-    if "`focus'"=="" & "`range'"=="" & "`xrange'"=="" & "`yrange'"=="" ///
-        local aspopt "aspect(1)"
-    else local aspopt ""
+    * aspect ratio is off by default (so a title does not leave side gaps);
+    * pass aspect(1) for a square quadrant, or any value twoway accepts.
+    if "`aspect'"!="" local aspopt "aspect(`aspect')"
+    else              local aspopt ""
+
+    * axis titles and main title, with optional font sizes
+    if "`xtitsize'"!="" local xtopt `"xtitle(`"`xtitle'"', size(`xtitsize'))"'
+    else                local xtopt `"xtitle(`"`xtitle'"')"'
+    if "`ytitsize'"!="" local ytopt `"ytitle(`"`ytitle'"', size(`ytitsize'))"'
+    else                local ytopt `"ytitle(`"`ytitle'"')"'
+    if `"`title'"'==""       local titopt ""
+    else if "`titsize'"!=""  local titopt `"title(`"`title'"', size(`titsize'))"'
+    else                     local titopt `"title(`"`title'"')"'
 
     twoway `plot' ///
         , xline(`xline', lcolor(cranberry) lwidth(medium)) ///
@@ -356,8 +377,7 @@ program define quadrant
           xlabel(`xlab_lo'(`xstep')`xlab_hi', grid glcolor(gs13)) ///
           ylabel(`ylab_lo'(`ystep')`ylab_hi', grid glcolor(gs13) angle(0)) ///
           xscale(range(`xlo' `xhi')) yscale(range(`ylo' `yhi')) ///
-          xtitle(`"`xtitle'"') ytitle(`"`ytitle'"') ///
-          `=cond(`"`title'"'=="","",`"title(`"`title'"')"')' ///
+          `xtopt' `ytopt' `titopt' ///
           `legopt' ///
           graphregion(color(white)) plotregion(color(white) margin(small)) ///
           `aspopt' name(`name', replace) `nodraw'
