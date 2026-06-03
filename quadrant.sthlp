@@ -33,7 +33,8 @@
 {synopt:{opth mlabel(varname)}}text label for each point{p_end}
 {synopt:{opt hollow(string)}}value of {opt mlabel()} drawn with a hollow marker{p_end}
 {synopt:{opt msize(string)}}marker size; default {cmd:medium}{p_end}
-{synopt:{opt msymbol(string)}}marker symbol; default {cmd:O} (the hollow category uses the matching outline symbol){p_end}
+{synopt:{opt msymbol(string)}}marker symbol for all groups; default {cmd:O} (the hollow category uses the matching outline symbol){p_end}
+{synopt:{opt symbols(string)}}explicit marker symbol per group as {it:value=symbol} pairs, e.g. {cmd:symbols(KMT=D DPP=d TPP=O)}{p_end}
 {synopt:{opt mlabsize(string)}}label size; default {cmd:small}{p_end}
 
 {syntab:Reference cross}
@@ -103,9 +104,16 @@ and combines them into a single faceted graph; {opt cols(#)} sets the number of
 columns (default: auto). All other options (including {opt by()}, {opt mlabel()},
 {opt meanlines}, {opt range()}) apply within each panel.
 
-{phang}{opt msymbol(string)} sets the marker symbol (default {cmd:O}); the
-hollow category automatically uses the matching outline symbol. {opt msize()}
-sets the marker size.
+{phang}{opt msymbol(string)} sets the marker symbol for all groups (default
+{cmd:O}); the hollow category automatically uses the matching outline symbol.
+{opt msize()} sets the marker size.
+
+{phang}{opt symbols(string)} assigns a marker symbol to specific groups as
+{it:value=symbol} pairs, e.g. {cmd:symbols(KMT=D DPP=d TPP=O 中立無反應=o)}
+(D = large diamond, d = small diamond, O = large circle, o = small circle, ...).
+The key may be the group's value label or its raw value (use the raw value when
+the label contains spaces); groups not listed keep {opt msymbol()}. Pairs nicely
+with {opt colors()} for a colour- and shape-coded legend.
 
 {phang}{opt title()}, {opt xtitle()} and {opt ytitle()} are passed through to
 {cmd:twoway} verbatim, so any sub-option works inside them, e.g.

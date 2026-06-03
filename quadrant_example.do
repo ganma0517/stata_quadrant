@@ -58,4 +58,11 @@ quadrant support nimby, by(pid) mlabel(energy) focus ///
 quadrant support nimby, by(pid) mlabel(energy) focus ///
     legend(position(3) cols(1) size(small))
 
+* 13) Assign a marker SHAPE to each group with value=symbol pairs, and pair it
+*     with colors() for a legend coded by both colour and shape.
+*     (D=large diamond, d=small diamond, O=large circle, o=small circle)
+quadrant support nimby, by(pid) mlabel(energy) focus ///
+    symbols(Blue=D Green=d Other=O White=o) ///
+    colors(Blue=navy Green=forest_green Other=orange White=gs8)
+
 display as result "quadrant tutorial finished — see help quadrant."

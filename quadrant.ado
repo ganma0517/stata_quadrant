@@ -21,7 +21,9 @@
 *!   colors(string)     explicit colour per group as value=colour pairs, e.g.
 *!                      colors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
 *!   msize(string)      marker size (default medium)
-*!   msymbol(string)    marker symbol (default O; hollow uses outline variant)
+*!   msymbol(string)    marker symbol for all groups (default O)
+*!   symbols(string)    explicit marker symbol per group as value=symbol pairs,
+*!                      e.g. symbols(KMT=D DPP=d TPP=O 中立無反應=o)
 *!   mlabsize(string)   label size (default small)
 *!   title/xtitle/ytitle  passed through verbatim, so sub-options work, e.g.
 *!                        xtitle("NIMBY (%)", size(large))
@@ -40,7 +42,7 @@ program define quadrant
         [ by(varname) OVERALL MLABel(varname) HOLLOW(string) ///
           XLINE(real 50) YLINE(real 50) MEANlines FOCus ///
           PALette(string) COLORS(string asis) ///
-          MSize(string) MSYMbol(string) MLABSize(string) ///
+          MSize(string) MSYMbol(string) SYMBOLS(string asis) MLABSize(string) ///
           XRANGE(numlist min=2 max=2) YRANGE(numlist min=2 max=2) ///
           RANGE(numlist min=2 max=2) ASPect(string) ///
           PANel(varname) COLs(integer 0) ///
@@ -81,6 +83,7 @@ program define quadrant
         if `"`hollow'"'!="" local opts `"`opts' hollow(`"`hollow'"')"'
         if "`msize'"!=""    local opts `"`opts' msize(`msize')"'
         if "`msymbol'"!=""  local opts `"`opts' msymbol(`msymbol')"'
+        if `"`symbols'"'!="" local opts `"`opts' symbols(`symbols')"'
         if "`mlabsize'"!="" local opts `"`opts' mlabsize(`mlabsize')"'
         if "`aspect'"!=""   local opts `"`opts' aspect(`aspect')"'
         if "`palette'"!=""  local opts `"`opts' palette(`"`palette'"')"'
@@ -147,7 +150,19 @@ program define quadrant
                         }
                     }
                 }
-                local lplot `"`lplot' (scatteri . ., msymbol(`=cond("`msymbol'"=="","O","`msymbol'")') mcolor(`lc')) "'
+                * honour the same symbols("group=symbol") mapping as the panels
+                local lsym = cond("`msymbol'"=="","O","`msymbol'")
+                if `"`symbols'"'!="" {
+                    foreach kv of local symbols {
+                        local eq = strpos(`"`kv'"',"=")
+                        if `eq' {
+                            local k = substr(`"`kv'"',1,`eq'-1)
+                            local s = substr(`"`kv'"',`eq'+1,.)
+                            if `"`k'"'==`"`glab'"' | `"`k'"'=="`g'" local lsym `"`s'"'
+                        }
+                    }
+                }
+                local lplot `"`lplot' (scatteri . ., msymbol(`lsym') mcolor(`lc')) "'
                 local lord `lord' `ii' `"`glab'"'
             }
             * default shared legend sits at the bottom; user legend() sub-options
@@ -321,14 +336,30 @@ program define quadrant
                     }
                 }
             }
+            * marker symbol: explicit symbols("group=symbol" ...) mapping wins,
+            * else the global msymbol(). The hollow category uses the matching
+            * outline variant (D->Dh, o->oh, ...).
+            local gsym "`msymbol'"
+            if `"`symbols'"'!="" {
+                foreach kv of local symbols {
+                    local eq = strpos(`"`kv'"',"=")
+                    if `eq' {
+                        local k = substr(`"`kv'"',1,`eq'-1)
+                        local s = substr(`"`kv'"',`eq'+1,.)
+                        if `"`k'"'==`"`glab'"' | `"`k'"'=="`g'" local gsym `"`s'"'
+                    }
+                }
+            }
+            if substr("`gsym'",-1,1)=="h" local ghsym "`gsym'"
+            else                          local ghsym "`gsym'h"
             if `hasH' {
-                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & !(`hcond'), msymbol(`msymbol') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & !(`hcond'), msymbol(`gsym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
                 local n1 = `=2*`i'-1'
-                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & `hcond', msymbol(`hsym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & `hcond', msymbol(`ghsym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
                 local legord `legord' `n1' `"`glab'"'
             }
             else {
-                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond', msymbol(`msymbol') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond', msymbol(`gsym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
                 local legord `legord' `i' `"`glab'"'
             }
         }

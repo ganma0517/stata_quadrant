@@ -72,6 +72,22 @@ quadrant support nimby, by(party) mlabel(issue) ///
 
 The same mapping is used consistently across faceted panels and in the shared legend.
 
+## Assigning a marker shape to each group — `symbols()`
+
+Map specific groups to specific marker symbols with `value=symbol` pairs (same
+key rules as `colors()`). Stata symbols include `O`/`o` (large/small circle),
+`D`/`d` (large/small diamond), `T`/`t` (triangle), `S`/`s` (square). The hollow
+category automatically uses the matching outline symbol. Combine with `colors()`
+for a legend that is coded by both colour and shape:
+
+```stata
+quadrant support nimby, by(party) mlabel(issue) ///
+    symbols(KMT=D DPP=d TPP=O 中立無反應=o) ///
+    colors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
+```
+
+![symbols by group](example_symbols.png)
+
 ## Faceting with `panel()`
 
 Draw one quadrant per level of another variable and combine them — ideal for
@@ -111,7 +127,8 @@ quadrant yvar xvar [if] [in] [, options]
 | `range(# #)` | axis range (both axes) | 0 100 |
 | `xrange(# #)` `yrange(# #)` | set each axis range separately | — |
 | `palette()` | colours, one per group (positional) | — |
-| `msize()` `msymbol()` | marker size / symbol | medium / `O` |
+| `msize()` `msymbol()` | marker size / symbol (all groups) | medium / `O` |
+| `symbols()` | explicit marker symbol per group, e.g. `symbols(KMT=D DPP=d TPP=O)` | — |
 | `mlabsize()` | point-label size | small |
 | `title()` `xtitle()` `ytitle()` | titles (accept sub-options, e.g. `size()`) | — |
 | `aspect()` | aspect ratio (use `aspect(1)` for square) | off |
