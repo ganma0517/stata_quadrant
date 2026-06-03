@@ -56,6 +56,22 @@ quadrant support nimby, by(pid) mlabel(energy) hollow("Nuclear")
 quadrant support nimby, by(pid) overall mlabel(energy) hollow("Nuclear")
 ```
 
+## Assigning a colour to each group — `colors()`
+
+Map specific groups to specific colours with `value=colour` pairs. The key can be
+the group's value label or its raw level value; any group you don't list keeps the
+default palette colour. Handy for party colours, e.g. KMT blue, DPP green, TPP grey,
+neutral/no-response black:
+
+```stata
+quadrant support nimby, by(party) mlabel(issue) ///
+    colors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
+```
+
+![colours by group](example_colors.png)
+
+The same mapping is used consistently across faceted panels and in the shared legend.
+
 ## Faceting with `panel()`
 
 Draw one quadrant per level of another variable and combine them — ideal for
@@ -83,6 +99,7 @@ quadrant yvar xvar [if] [in] [, options]
 | Option | Description | Default |
 |---|---|---|
 | `by(varname)` | colour points by group + legend | — |
+| `colors()` | explicit colour per group, e.g. `colors(KMT=blue DPP=green TPP=gs8)` | — |
 | `overall` | also plot pooled mean points (black) | off |
 | `mlabel(varname)` | point text labels | — |
 | `hollow(string)` | label value drawn with a hollow marker | — |
@@ -93,13 +110,12 @@ quadrant yvar xvar [if] [in] [, options]
 | `cols(#)` | columns when faceting | auto |
 | `range(# #)` | axis range (both axes) | 0 100 |
 | `xrange(# #)` `yrange(# #)` | set each axis range separately | — |
-| `legpos(#)` | legend position (6 = bottom) | 6 |
-| `palette()` | colors, one per group | — |
+| `palette()` | colours, one per group (positional) | — |
 | `msize()` `msymbol()` | marker size / symbol | medium / `O` |
 | `mlabsize()` | point-label size | small |
 | `title()` `xtitle()` `ytitle()` | titles (accept sub-options, e.g. `size()`) | — |
 | `aspect()` | aspect ratio (use `aspect(1)` for square) | off |
-| `legend()` | `on` (default) / `off` | on |
+| `legend()` | `off`, or any twoway `legend()` sub-options, e.g. `legend(position(3) cols(1))` | bottom |
 | `saving()` `name()` | export / window name | — |
 
 See `help quadrant` for full documentation and examples.

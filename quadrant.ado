@@ -17,7 +17,9 @@
 *!   yline(#)           horizontal reference line (default 50)
 *!   meanlines          put the reference cross at the means of x and y
 *!                      instead of xline()/yline()
-*!   palette(string)    space-separated colors, one per group
+*!   palette(string)    space-separated colors, one per group (positional)
+*!   colors(string)     explicit colour per group as value=colour pairs, e.g.
+*!                      colors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
 *!   msize(string)      marker size (default medium)
 *!   msymbol(string)    marker symbol (default O; hollow uses outline variant)
 *!   mlabsize(string)   label size (default small)
@@ -28,7 +30,8 @@
 *!   panel(varname)     facet: draw one quadrant per level and combine them
 *!   cols(#)            number of columns when faceting (default: auto)
 *!   xtitle ytitle title(string)
-*!   legend(string)     "on" (default) / "off"
+*!   legend(string)     "off", or any twoway legend() sub-options, e.g.
+*!                      legend(position(3) cols(1) size(small))
 *!   saving(string) name(string)
 
 program define quadrant
@@ -36,12 +39,13 @@ program define quadrant
     syntax varlist(min=2 max=2 numeric) [if] [in] , ///
         [ by(varname) OVERALL MLABel(varname) HOLLOW(string) ///
           XLINE(real 50) YLINE(real 50) MEANlines FOCus ///
-          PALette(string) MSize(string) MSYMbol(string) MLABSize(string) ///
+          PALette(string) COLORS(string asis) ///
+          MSize(string) MSYMbol(string) MLABSize(string) ///
           XRANGE(numlist min=2 max=2) YRANGE(numlist min=2 max=2) ///
-          RANGE(numlist min=2 max=2) LEGPOS(integer 6) ASPect(string) ///
+          RANGE(numlist min=2 max=2) ASPect(string) ///
           PANel(varname) COLs(integer 0) ///
           title(string asis) XTITle(string asis) YTITle(string asis) ///
-          Legend(string) saving(string) name(string) NODRAW ]
+          Legend(string asis) saving(string) name(string) NODRAW ]
 
     gettoken yv xv : varlist
 
@@ -68,10 +72,10 @@ program define quadrant
         * a single shared legend (at the bottom) is drawn once for the whole
         * figure whenever points are grouped; the sub-plots themselves carry
         * no legend so the panels stay clean.
-        local sharedleg = ("`by'"!="" & "`legend'"!="off")
+        local sharedleg = ("`by'"!="" & `"`legend'"'!="off")
 
         * collect passthrough options
-        local opts `"xline(`xline') yline(`yline') legpos(`legpos') `meanlines' `focus' `overall'"'
+        local opts `"xline(`xline') yline(`yline') `meanlines' `focus' `overall'"'
         if "`by'"!=""       local opts `"`opts' by(`by')"'
         if "`mlabel'"!=""   local opts `"`opts' mlabel(`mlabel')"'
         if `"`hollow'"'!="" local opts `"`opts' hollow(`"`hollow'"')"'
@@ -80,6 +84,7 @@ program define quadrant
         if "`mlabsize'"!="" local opts `"`opts' mlabsize(`mlabsize')"'
         if "`aspect'"!=""   local opts `"`opts' aspect(`aspect')"'
         if "`palette'"!=""  local opts `"`opts' palette(`"`palette'"')"'
+        if `"`colors'"'!="" local opts `"`opts' colors(`colors')"'
         if "`range'"!=""    local opts `"`opts' range(`range')"'
         if "`xrange'"!=""   local opts `"`opts' xrange(`xrange')"'
         if "`yrange'"!=""   local opts `"`opts' yrange(`yrange')"'
@@ -87,7 +92,7 @@ program define quadrant
         if `"`ytitle'"'!="" local opts `"`opts' ytitle(`ytitle')"'
         * suppress per-panel legends when we will draw one shared legend
         if `sharedleg'                local opts `"`opts' legend(off)"'
-        else if `"`legend'"'!=""      local opts `"`opts' legend(`"`legend'"')"'
+        else if `"`legend'"'!=""      local opts `"`opts' legend(`legend')"'
 
         local subnames ""
         local j = 0
@@ -131,11 +136,26 @@ program define quadrant
                     local glab : label (`by') `g'
                     if `"`glab'"'=="" local glab "`g'"
                 }
-                local lplot `"`lplot' (scatteri . ., msymbol(O) mcolor(`lc')) "'
+                * honour the same colors("group=colour") mapping as the panels
+                if `"`colors'"'!="" {
+                    foreach kv of local colors {
+                        local eq = strpos(`"`kv'"',"=")
+                        if `eq' {
+                            local k = substr(`"`kv'"',1,`eq'-1)
+                            local c = substr(`"`kv'"',`eq'+1,.)
+                            if `"`k'"'==`"`glab'"' | `"`k'"'=="`g'" local lc `"`c'"'
+                        }
+                    }
+                }
+                local lplot `"`lplot' (scatteri . ., msymbol(`=cond("`msymbol'"=="","O","`msymbol'")') mcolor(`lc')) "'
                 local lord `lord' `ii' `"`glab'"'
             }
+            * default shared legend sits at the bottom; user legend() sub-options
+            * (other than off) override the placement.
+            if `"`legend'"'=="" | `"`legend'"'=="on" local leglg `"rows(1) position(6)"'
+            else local leglg `"`legend'"'
             twoway `lplot' ///
-                , legend(order(`lord') rows(1) position(6)) ///
+                , legend(order(`lord') `leglg') ///
                   xscale(off) yscale(off) ///
                   graphregion(color(white)) plotregion(color(white) margin(zero)) ///
                   fysize(14) name(_qd_legend, replace) nodraw
@@ -278,7 +298,6 @@ program define quadrant
         quietly levelsof `by' if `touse', local(glevs)
         foreach g of local glevs {
             local ++i
-            local col : word `i' of `palette'
             if `bystr' {
                 local gcond `"`by'=="`g'""'
                 local glab "`g'"
@@ -287,6 +306,20 @@ program define quadrant
                 local gcond `"`by'==`g'"'
                 local glab : label (`by') `g'
                 if `"`glab'"'=="" local glab "`g'"
+            }
+            * colour: explicit colors("group=colour" ...) mapping wins; the
+            * key may be the value label (e.g. KMT) or the raw level value.
+            * Otherwise fall back to the positional palette().
+            local col : word `i' of `palette'
+            if `"`colors'"'!="" {
+                foreach kv of local colors {
+                    local eq = strpos(`"`kv'"',"=")
+                    if `eq' {
+                        local k = substr(`"`kv'"',1,`eq'-1)
+                        local c = substr(`"`kv'"',`eq'+1,.)
+                        if `"`k'"'==`"`glab'"' | `"`k'"'=="`g'" local col `"`c'"'
+                    }
+                }
             }
             if `hasH' {
                 local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & !(`hcond'), msymbol(`msymbol') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
@@ -311,9 +344,13 @@ program define quadrant
         }
     }
 
-    * legend spec — default position 6 (bottom), in one row
-    if "`legend'"=="off" local legopt "legend(off)"
-    else local legopt `"legend(order(`legord') rows(1) position(`legpos'))"'
+    * legend — the key order() is managed internally (the hollow category adds
+    * extra plot entries); any twoway legend() sub-options the user supplies are
+    * merged in, e.g. legend(position(3) cols(1) size(small)). Default: bottom.
+    if `"`legend'"'=="off" local legopt "legend(off)"
+    else if `"`legend'"'=="" | `"`legend'"'=="on" ///
+        local legopt `"legend(order(`legord') rows(1) position(6))"'
+    else local legopt `"legend(order(`legord') `legend')"'
 
     * tidy axis label step for each axis: aim for ~5 intervals and snap to a
     * "nice" number (1, 2, 5 x 10^k) so the axes stay clean and uncluttered.

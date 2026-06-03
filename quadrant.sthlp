@@ -26,6 +26,7 @@
 {synoptline}
 {syntab:Grouping}
 {synopt:{opth by(varname)}}colour points by this group and add a legend{p_end}
+{synopt:{opt colors(string)}}explicit colour per group as {it:value=colour} pairs, e.g. {cmd:colors(KMT=blue DPP=green TPP=gs8)}{p_end}
 {synopt:{opt overall}}also plot the overall (ungrouped) point set in black (with {opt by()}){p_end}
 
 {syntab:Labels and markers}
@@ -41,7 +42,6 @@
 {synopt:{opt meanlines}}put the cross at the means of x and y instead{p_end}
 {synopt:{opt focus}}auto-zoom the axes to the data range (tidy integer ticks){p_end}
 {synopt:{opt xrange(# #)} {opt yrange(# #)}}set each axis range separately{p_end}
-{synopt:{opt legpos(#)}}legend position clock value; default {cmd:6} (bottom){p_end}
 
 {syntab:Faceting}
 {synopt:{opth panel(varname)}}draw one quadrant per level of this variable and combine them{p_end}
@@ -49,11 +49,11 @@
 
 {syntab:Axes and titles}
 {synopt:{opt range(# #)}}axis range for both axes; default {cmd:0 100}{p_end}
-{synopt:{opt palette(string)}}colors, one per group{p_end}
+{synopt:{opt palette(string)}}colours, one per group (positional); see {opt colors()} for explicit mapping{p_end}
 {synopt:{opt title(string)}}graph title; accepts sub-options, e.g. {cmd:title("Map", size(large))}{p_end}
 {synopt:{opt xtitle(string)} {opt ytitle(string)}}axis titles; accept sub-options, e.g. {cmd:xtitle("NIMBY (%)", size(large))}{p_end}
 {synopt:{opt aspect(string)}}aspect ratio (off by default); use {cmd:aspect(1)} for a square quadrant{p_end}
-{synopt:{opt legend(string)}}{cmd:on} (default) / {cmd:off}{p_end}
+{synopt:{opt legend(string)}}{cmd:off}, or any {help legend_options:legend()} sub-options, e.g. {cmd:legend(position(3) cols(1))}{p_end}
 
 {syntab:Saving}
 {synopt:{opt saving(string)}}export the graph{p_end}
@@ -83,6 +83,13 @@ Three common modes: {bf:ungrouped} (omit {opt by()}, one colour); {bf:grouped}
 
 {phang}{opth by(varname)} colours points by group and adds a legend.
 
+{phang}{opt colors(string)} assigns an explicit colour to each group as a list
+of {it:value=colour} pairs, e.g.
+{cmd:colors(KMT=blue DPP=green TPP=gs8 中立無反應=black)}. The key may be the
+group's value label or its raw level value; any group not listed falls back to
+the positional {opt palette()}. Use named colours (e.g. {cmd:blue}, {cmd:gs8},
+{cmd:black}).
+
 {phang}{opt overall} (with {opt by()}) also plots the pooled point set in black.
 
 {phang}{opth mlabel(varname)} labels each point; {opt hollow(string)} draws
@@ -106,9 +113,13 @@ sets the marker size.
 {opt aspect()} is off by default so a title leaves no side gaps; pass
 {opt aspect(1)} for a square quadrant.
 
+{phang}{opt legend(string)} accepts {cmd:off} to hide the legend, or any
+{help legend_options:legend()} sub-options, which are merged with the
+automatically-built key order, e.g. {cmd:legend(position(3) cols(1) size(small))}.
+In a faceted figure the legend is shared once at the bottom by default.
+
 {phang}{opt range(# #)}, {opt palette()}, {opt msize()}, {opt mlabsize()},
-{opt title()}, {opt xtitle()}, {opt ytitle()}, {opt legend()}, {opt saving()},
-{opt name()} control appearance and output.
+{opt saving()}, {opt name()} control appearance and output.
 
 
 {marker examples}{...}

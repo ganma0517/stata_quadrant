@@ -48,4 +48,14 @@ quadrant support nimby, by(pid) mlabel(energy) focus ///
 * 10) Want a perfectly square quadrant? Add aspect(1).
 quadrant support nimby, by(pid) mlabel(energy) aspect(1)
 
+* 11) Assign an explicit colour to each group with value=colour pairs.
+*     Keys match the value label (or the raw level). Here pid is labelled
+*     Blue/Green/Other/White in the demo; map them to chosen colours.
+quadrant support nimby, by(pid) mlabel(energy) focus ///
+    colors(Blue=navy Green=forest_green Other=orange White=gs8)
+
+* 12) Legend behaves like twoway's legend(): move it, set columns, resize, off.
+quadrant support nimby, by(pid) mlabel(energy) focus ///
+    legend(position(3) cols(1) size(small))
+
 display as result "quadrant tutorial finished — see help quadrant."
