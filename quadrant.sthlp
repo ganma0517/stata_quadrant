@@ -86,9 +86,9 @@ Three common modes: {bf:ungrouped} (omit {opt by()}, one colour); {bf:grouped}
 {phang}{opt colors(string)} assigns an explicit colour to each group as a list
 of {it:value=colour} pairs, e.g.
 {cmd:colors(KMT=blue DPP=green TPP=gs8 中立無反應=black)}. The key may be the
-group's value label or its raw level value; any group not listed falls back to
-the positional {opt palette()}. Use named colours (e.g. {cmd:blue}, {cmd:gs8},
-{cmd:black}).
+group's value label or its raw level value (use the raw value when the label
+contains spaces); any group not listed falls back to the positional
+{opt palette()}. Use named colours (e.g. {cmd:blue}, {cmd:gs8}, {cmd:black}).
 
 {phang}{opt overall} (with {opt by()}) also plots the pooled point set in black.
 
