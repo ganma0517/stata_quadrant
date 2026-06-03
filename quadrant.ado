@@ -21,7 +21,8 @@
 *!   msize(string)      marker size (default medium)
 *!   msymbol(string)    marker symbol (default O; hollow uses outline variant)
 *!   mlabsize(string)   label size (default small)
-*!   titsize/xtitsize/ytitsize  font sizes for the title and axis titles
+*!   title/xtitle/ytitle  passed through verbatim, so sub-options work, e.g.
+*!                        xtitle("NIMBY (%)", size(large))
 *!   aspect(string)     aspect ratio (off by default; aspect(1) = square)
 *!   range(# #)         axis range for both axes (default 0 100)
 *!   panel(varname)     facet: draw one quadrant per level and combine them
@@ -40,7 +41,6 @@ program define quadrant
           RANGE(numlist min=2 max=2) LEGPOS(integer 6) ASPect(string) ///
           PANel(varname) COLs(integer 0) ///
           title(string asis) XTITle(string asis) YTITle(string asis) ///
-          TITSize(string) XTITSize(string) YTITSize(string) ///
           Legend(string) saving(string) name(string) NODRAW ]
 
     gettoken yv xv : varlist
@@ -83,11 +83,8 @@ program define quadrant
         if "`range'"!=""    local opts `"`opts' range(`range')"'
         if "`xrange'"!=""   local opts `"`opts' xrange(`xrange')"'
         if "`yrange'"!=""   local opts `"`opts' yrange(`yrange')"'
-        if `"`xtitle'"'!="" local opts `"`opts' xtitle(`"`xtitle'"')"'
-        if `"`ytitle'"'!="" local opts `"`opts' ytitle(`"`ytitle'"')"'
-        if "`xtitsize'"!="" local opts `"`opts' xtitsize(`xtitsize')"'
-        if "`ytitsize'"!="" local opts `"`opts' ytitsize(`ytitsize')"'
-        if "`titsize'"!=""  local opts `"`opts' titsize(`titsize')"'
+        if `"`xtitle'"'!="" local opts `"`opts' xtitle(`xtitle')"'
+        if `"`ytitle'"'!="" local opts `"`opts' ytitle(`ytitle')"'
         * suppress per-panel legends when we will draw one shared legend
         if `sharedleg'                local opts `"`opts' legend(off)"'
         else if `"`legend'"'!=""      local opts `"`opts' legend(`"`legend'"')"'
@@ -110,6 +107,10 @@ program define quadrant
                 title("`plab'") name(`sub`j'') nodraw
             local subnames `subnames' `sub`j''
         }
+
+        * combined-figure title, passed through verbatim (supports size() etc.)
+        if `"`title'"'=="" local ptit ""
+        else               local ptit `"title(`title')"'
 
         if `sharedleg' {
             * build a legend-only graph (no visible markers) and attach it as a
@@ -141,12 +142,12 @@ program define quadrant
             graph combine `subnames', cols(`cols') ///
                 graphregion(color(white)) name(_qd_grid, replace) nodraw
             graph combine _qd_grid _qd_legend, cols(1) imargin(zero) ///
-                `=cond(`"`title'"'=="","",`"title(`"`title'"')"')' ///
+                `ptit' ///
                 graphregion(color(white)) name(`name', replace) `nodraw'
         }
         else {
             graph combine `subnames', cols(`cols') ///
-                `=cond(`"`title'"'=="","",`"title(`"`title'"')"')' ///
+                `ptit' ///
                 graphregion(color(white)) name(`name', replace) `nodraw'
         }
         if `"`saving'"' != "" {
@@ -168,22 +169,6 @@ program define quadrant
     * hollow variant of the chosen marker (O->Oh, D->Dh, S->Sh, T->Th, ...)
     if substr("`msymbol'", -1, 1)=="h" local hsym "`msymbol'"
     else                               local hsym "`msymbol'h"
-    if `"`xtitle'"'=="" {
-        local xtl : variable label `xv'
-        if `"`xtl'"'=="" local xtl "`xv'"
-        local xtitle `"`xtl'"'
-    }
-    if `"`ytitle'"'=="" {
-        local ytl : variable label `yv'
-        if `"`ytl'"'=="" local ytl "`yv'"
-        local ytitle `"`ytl'"'
-    }
-    foreach t in title xtitle ytitle {
-        local tv `"``t''"'
-        if substr(`"`tv'"',1,1)==`"""' & substr(`"`tv'"',-1,1)==`"""' {
-            local `t' = substr(`"`tv'"',2,length(`"`tv'"')-2)
-        }
-    }
     * axis ranges (x and y can differ). Priority:
     *   xrange()/yrange() > range() (both axes) > focus (auto) > default 0..100
     * default
@@ -362,14 +347,25 @@ program define quadrant
     if "`aspect'"!="" local aspopt "aspect(`aspect')"
     else              local aspopt ""
 
-    * axis titles and main title, with optional font sizes
-    if "`xtitsize'"!="" local xtopt `"xtitle(`"`xtitle'"', size(`xtitsize'))"'
-    else                local xtopt `"xtitle(`"`xtitle'"')"'
-    if "`ytitsize'"!="" local ytopt `"ytitle(`"`ytitle'"', size(`ytitsize'))"'
-    else                local ytopt `"ytitle(`"`ytitle'"')"'
-    if `"`title'"'==""       local titopt ""
-    else if "`titsize'"!=""  local titopt `"title(`"`title'"', size(`titsize'))"'
-    else                     local titopt `"title(`"`title'"')"'
+    * Axis titles and main title are passed through verbatim, so the user can
+    * add any twoway sub-option inside them, e.g.
+    *   xtitle("NIMBY (%)", size(large))   ytitle("Support (%)", size(large))
+    *   title("My map", size(large) color(navy))
+    * When an axis title is omitted, fall back to the variable label (quoted).
+    if `"`xtitle'"'!="" local xtopt `"xtitle(`xtitle')"'
+    else {
+        local xtl : variable label `xv'
+        if `"`xtl'"'=="" local xtl "`xv'"
+        local xtopt `"xtitle(`"`xtl'"')"'
+    }
+    if `"`ytitle'"'!="" local ytopt `"ytitle(`ytitle')"'
+    else {
+        local ytl : variable label `yv'
+        if `"`ytl'"'=="" local ytl "`yv'"
+        local ytopt `"ytitle(`"`ytl'"')"'
+    }
+    if `"`title'"'=="" local titopt ""
+    else               local titopt `"title(`title')"'
 
     twoway `plot' ///
         , xline(`xline', lcolor(cranberry) lwidth(medium)) ///

@@ -39,10 +39,11 @@ quadrant support nimby, panel(energy) by(party) range(30 90)
 quadrant support nimby, by(pid) mlabel(energy) hollow("Nuclear") focus ///
     msymbol(D) msize(large)
 
-* 9) Bigger title and axis-title fonts; no side gap because aspect is off.
+* 9) Bigger title and axis-title fonts via inline size() sub-options
+*    (no separate *size options needed); no side gap because aspect is off.
 quadrant support nimby, by(pid) mlabel(energy) focus ///
-    title("Energy positioning") titsize(large) ///
-    xtitle("NIMBY (%)") ytitle("Support (%)") xtitsize(large) ytitsize(large)
+    title("Energy positioning", size(large)) ///
+    xtitle("NIMBY (%)", size(large)) ytitle("Support (%)", size(large))
 
 * 10) Want a perfectly square quadrant? Add aspect(1).
 quadrant support nimby, by(pid) mlabel(energy) aspect(1)

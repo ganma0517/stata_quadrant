@@ -50,10 +50,8 @@
 {syntab:Axes and titles}
 {synopt:{opt range(# #)}}axis range for both axes; default {cmd:0 100}{p_end}
 {synopt:{opt palette(string)}}colors, one per group{p_end}
-{synopt:{opt title(string)}}graph title{p_end}
-{synopt:{opt xtitle(string)} {opt ytitle(string)}}axis titles{p_end}
-{synopt:{opt titsize(string)}}main-title font size (e.g. {cmd:large}, {cmd:medium}){p_end}
-{synopt:{opt xtitsize(string)} {opt ytitsize(string)}}axis-title font sizes{p_end}
+{synopt:{opt title(string)}}graph title; accepts sub-options, e.g. {cmd:title("Map", size(large))}{p_end}
+{synopt:{opt xtitle(string)} {opt ytitle(string)}}axis titles; accept sub-options, e.g. {cmd:xtitle("NIMBY (%)", size(large))}{p_end}
 {synopt:{opt aspect(string)}}aspect ratio (off by default); use {cmd:aspect(1)} for a square quadrant{p_end}
 {synopt:{opt legend(string)}}{cmd:on} (default) / {cmd:off}{p_end}
 
@@ -102,9 +100,11 @@ columns (default: auto). All other options (including {opt by()}, {opt mlabel()}
 hollow category automatically uses the matching outline symbol. {opt msize()}
 sets the marker size.
 
-{phang}{opt titsize()}, {opt xtitsize()}, {opt ytitsize()} set the font size of
-the main title and the axis titles. {opt aspect()} is off by default so a title
-leaves no side gaps; pass {opt aspect(1)} for a square quadrant.
+{phang}{opt title()}, {opt xtitle()} and {opt ytitle()} are passed through to
+{cmd:twoway} verbatim, so any sub-option works inside them, e.g.
+{cmd:xtitle("NIMBY (%)", size(large))} or {cmd:title("Map", size(large) color(navy))}.
+{opt aspect()} is off by default so a title leaves no side gaps; pass
+{opt aspect(1)} for a square quadrant.
 
 {phang}{opt range(# #)}, {opt palette()}, {opt msize()}, {opt mlabsize()},
 {opt title()}, {opt xtitle()}, {opt ytitle()}, {opt legend()}, {opt saving()},

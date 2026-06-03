@@ -97,8 +97,7 @@ quadrant yvar xvar [if] [in] [, options]
 | `palette()` | colors, one per group | — |
 | `msize()` `msymbol()` | marker size / symbol | medium / `O` |
 | `mlabsize()` | point-label size | small |
-| `title()` `xtitle()` `ytitle()` | titles | — |
-| `titsize()` `xtitsize()` `ytitsize()` | title font sizes | — |
+| `title()` `xtitle()` `ytitle()` | titles (accept sub-options, e.g. `size()`) | — |
 | `aspect()` | aspect ratio (use `aspect(1)` for square) | off |
 | `legend()` | `on` (default) / `off` | on |
 | `saving()` `name()` | export / window name | — |
