@@ -167,13 +167,13 @@ program define quadrant
             }
             * default shared legend sits at the bottom; user legend() sub-options
             * (other than off) override the placement.
-            if `"`legend'"'=="" | `"`legend'"'=="on" local leglg `"rows(1) position(6)"'
+            if `"`legend'"'=="" | `"`legend'"'=="on" local leglg `"rows(1) position(12)"'
             else local leglg `"`legend'"'
             twoway `lplot' ///
                 , legend(order(`lord') `leglg') ///
                   xscale(off) yscale(off) ///
                   graphregion(color(white)) plotregion(color(white) margin(zero)) ///
-                  fysize(14) name(_qd_legend, replace) nodraw
+                  fysize(9) name(_qd_legend, replace) nodraw
             graph combine `subnames', cols(`cols') ///
                 graphregion(color(white)) name(_qd_grid, replace) nodraw
             graph combine _qd_grid _qd_legend, cols(1) imargin(zero) ///
