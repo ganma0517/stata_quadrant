@@ -25,13 +25,13 @@
 *!   msymbol(string)    marker symbol for all groups (default O)
 *!   symbols(string)    explicit marker symbol per group as value=symbol pairs,
 *!                      e.g. symbols(KMT=D DPP=d TPP=O 中立無反應=o)
-*!   symbolby(varname)  SECOND grouping mapped to marker symbols: each level of
+*!   bysymbol(varname)  SECOND grouping mapped to marker symbols: each level of
 *!                      this variable gets a different symbol while colour still
 *!                      follows by(). Default symbols: 1st level hollow circle
 *!                      (Oh), 2nd solid circle (O) — e.g. years 2024 vs 2026.
 *!                      Adds neutral grey legend keys for the levels.
-*!                      (overrides symbols()/hollow() for the markers)
-*!   sbsymbols(string)  symbol list for the symbolby() levels, positional,
+*!                      (symbolby() is kept as a backward-compatible alias)
+*!   sbsymbols(string)  symbol list for the bysymbol() levels, positional,
 *!                      e.g. sbsymbols(Oh O) or sbsymbols(Th T)
 *!   mlabsize(string)   label size (default small)
 *!   title/xtitle/ytitle  passed through verbatim, so sub-options work, e.g.
@@ -52,7 +52,7 @@ program define quadrant
           XLINE(real 50) YLINE(real 50) MEANlines FOCus ///
           PALette(string) BYColors(string asis) COLORS(string asis) ///
           MSize(string) MSYMbol(string) SYMBOLS(string asis) MLABSize(string) ///
-          SYMBOLBy(varname) SBSYMbols(string) ///
+          BYSYMbol(varname) SYMBOLBy(varname) SBSYMbols(string) ///
           XRANGE(numlist min=2 max=2) YRANGE(numlist min=2 max=2) ///
           RANGE(numlist min=2 max=2) ASPect(string) ///
           PANel(varname) COLs(integer 0) ///
@@ -64,6 +64,8 @@ program define quadrant
     * bycolors() is the documented name; colors() kept as backward-compatible alias
     if `"`bycolors'"'=="" local bycolors `"`colors'"'
     local colors `"`bycolors'"'
+    * bysymbol() is the documented name; symbolby() kept as backward-compat alias
+    if "`bysymbol'"!="" local symbolby "`bysymbol'"
 
     * =====================================================
     * PANEL MODE: draw one quadrant per level of panel()

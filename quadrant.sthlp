@@ -35,8 +35,8 @@
 {synopt:{opt msize(string)}}marker size; default {cmd:medium}{p_end}
 {synopt:{opt msymbol(string)}}marker symbol for all groups; default {cmd:O} (the hollow category uses the matching outline symbol){p_end}
 {synopt:{opt symbols(string)}}explicit marker symbol per group as {it:value=symbol} pairs, e.g. {cmd:symbols(KMT=D DPP=d TPP=O)}{p_end}
-{synopt:{opt symbolby(varname)}}a SECOND grouping mapped to marker symbols (colour still follows {opt by()}); default 1st level hollow circle, 2nd solid circle, e.g. years 2024 vs 2026{p_end}
-{synopt:{opt sbsymbols(string)}}symbol list for the {opt symbolby()} levels, positional, e.g. {cmd:sbsymbols(Oh O)} or {cmd:sbsymbols(Th T)}{p_end}
+{synopt:{opt bysym:bol(varname)}}a SECOND grouping mapped to marker symbols (colour still follows {opt by()}); default 1st level hollow circle, 2nd solid circle, e.g. years 2024 vs 2026 ({opt symbolby()} is a backward-compatible alias){p_end}
+{synopt:{opt sbsymbols(string)}}symbol list for the {opt bysymbol()} levels, positional, e.g. {cmd:sbsymbols(Oh O)} or {cmd:sbsymbols(Th T)}{p_end}
 {synopt:{opt mlabsize(string)}}label size; default {cmd:small}{p_end}
 
 {syntab:Reference cross}
@@ -117,7 +117,7 @@ columns (default: auto). All other options (including {opt by()}, {opt mlabel()}
 The key may be the group's value label or its raw value (use the raw value when
 the label contains spaces); groups not listed keep {opt msymbol()}.
 
-{phang}{opt symbolby(varname)} encodes a {it:second} grouping by marker
+{phang}{opt bysymbol(varname)} encodes a {it:second} grouping by marker
 {it:symbol} while colour continues to follow {opt by()}. By default the first
 level is drawn as a hollow circle and the second as a solid circle (e.g.
 {cmd:2024} hollow vs {cmd:2026} solid); customise with
@@ -125,7 +125,7 @@ level is drawn as a hollow circle and the second as a solid circle (e.g.
 shared legend gains neutral grey keys for each level. Works in single and
 {opt panel()} modes. Example:
 
-{phang2}{cmd:quadrant support nimby, by(party) panel(energy) symbolby(year) mlabel(yr2)}{p_end}
+{phang2}{cmd:quadrant support nimby, by(party) panel(energy) bysymbol(year) mlabel(yr2)}{p_end}
 
 {pmore}Pairs nicely
 with {opt bycolors()} for a colour- and shape-coded legend.

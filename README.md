@@ -90,9 +90,9 @@ quadrant support nimby, by(party) mlabel(issue) ///
 
 ![symbols by group](example_symbols.png)
 
-## Encoding a second grouping by shape — `symbolby()`
+## Encoding a second grouping by shape — `bysymbol()`
 
-Use `symbolby(var2)` when you want **colour to mark one grouping (`by()`) and
+Use `bysymbol(var2)` when you want **colour to mark one grouping (`by()`) and
 marker shape to mark a second** — the classic case is comparing two survey waves.
 By default the first level is a **hollow circle** and the second a **solid
 circle** (e.g. 2024 hollow, 2026 solid); customise with `sbsymbols()` (a
@@ -100,11 +100,15 @@ positional list, e.g. `sbsymbols(Th T)`). The shared legend gains neutral grey
 keys for each level, and it works in `panel()` mode too:
 
 ```stata
-quadrant support nimby, panel(energy) by(party) symbolby(year) ///
-    mlabel(yr2) bycolors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
+use quadrant_wave_demo.dta, clear     // bundled two-wave demo
+quadrant support nimby, panel(energy) by(party) bysymbol(wave) ///
+    mlabel(yr) bycolors(KMT=blue DPP=dkgreen TPP=ebblue Neutral=black)
 ```
 
-![symbolby example](example_symbolby.png)
+> `symbolby()` still works as a backward-compatible alias for `bysymbol()`.
+> A full runnable script is in `quadrant_bysymbol_example.do`.
+
+![bysymbol example](example_symbolby.png)
 
 ## Faceting with `panel()`
 
@@ -134,8 +138,8 @@ quadrant yvar xvar [if] [in] [, options]
 |---|---|---|
 | `by(varname)` | colour points by group + legend | — |
 | `bycolors()` | explicit colour per `by()` group, e.g. `bycolors(KMT=blue DPP=green TPP=gs8)` (alias: `colors()`) | — |
-| `symbolby(varname)` | second grouping coded by marker shape (e.g. 2024 hollow, 2026 solid) | — |
-| `sbsymbols()` | symbol list for `symbolby()` levels, e.g. `sbsymbols(Oh O)` | `Oh O …` |
+| `bysymbol(varname)` | second grouping coded by marker shape (e.g. 2024 hollow, 2026 solid); alias `symbolby()` | — |
+| `sbsymbols()` | symbol list for `bysymbol()` levels, e.g. `sbsymbols(Oh O)` | `Oh O …` |
 | `overall` | also plot pooled mean points (black) | off |
 | `mlabel(varname)` | point text labels | — |
 | `hollow(string)` | label value drawn with a hollow marker | — |
@@ -162,7 +166,9 @@ See `help quadrant` for full documentation and examples.
 - `quadrant.ado` — the command
 - `quadrant.sthlp` — Stata help file
 - `quadrant_example.do` — runnable tutorial
+- `quadrant_bysymbol_example.do` — runnable `bysymbol()` (colour × shape) example
 - `quadrant_demo.dta` — practice data (fictional, long format)
+- `quadrant_wave_demo.dta` — two-wave practice data for `bysymbol()` (2024 / 2026)
 - `example_quadrant.png` — demo figure
 - `quadrant.pkg`, `stata.toc` — package metadata for `net install`
 

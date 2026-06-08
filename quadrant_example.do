@@ -65,7 +65,7 @@ quadrant support nimby, by(pid) mlabel(energy) focus ///
     symbols(Blue=D Green=d Other=O White=o) ///
     bycolors(Blue=navy Green=forest_green Other=orange White=gs8)
 
-* 14) symbolby(): a SECOND grouping coded by marker SHAPE while colour still
+* 14) bysymbol(): a SECOND grouping coded by marker SHAPE while colour still
 *     follows by(). Classic use: compare two survey waves — 2024 hollow circle,
 *     2026 solid circle. Build a 2-wave demo on the fly:
 preserve
@@ -79,15 +79,15 @@ preserve
     gen wlab = cond(wave==2024, "24", "26")     // short point labels
 
     * single plot: colour = party, shape = wave (2024 hollow, 2026 solid)
-    quadrant support nimby, by(pid) symbolby(wave) mlabel(wlab) focus
+    quadrant support nimby, by(pid) bysymbol(wave) mlabel(wlab) focus
 
-    * panel + grouping + symbolby (the full combination)
-    quadrant support nimby, panel(energy) by(pid) symbolby(wave) ///
+    * panel + grouping + bysymbol (the full combination)
+    quadrant support nimby, panel(energy) by(pid) bysymbol(wave) ///
         mlabel(wlab) range(10 95) ///
         bycolors(Blue=blue Green=dkgreen Other=orange White=black)
 
     * customise the wave symbols if you prefer triangles, etc.
-    quadrant support nimby, by(pid) symbolby(wave) sbsymbols(Th T) focus
+    quadrant support nimby, by(pid) bysymbol(wave) sbsymbols(Th T) focus
 restore
 
 display as result "quadrant tutorial finished — see help quadrant."
