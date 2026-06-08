@@ -117,6 +117,20 @@ quadrant satisf price, by(region) panel(product) bysymbol(year) msize(*2) ///
 
 ![bysymbol example](example_symbolby.png)
 
+### Colour follows the panel
+
+To make **each panel entirely one colour** (e.g. one panel per party, every
+point in that panel drawn in the party's colour, with only the *symbol*
+differing by year), put the **same variable in both `by()` and `panel()`** and
+map the year to shape with `bysymbol()`:
+
+```stata
+quadrant satisf price, by(region) panel(region) bysymbol(year) ///
+    bycolors(North=navy South=forest_green East=orange West=gs7) sbsymbols(T O)
+```
+
+![colour follows panel](example_symbolby_panelcolor.png)
+
 ## Faceting with `panel()`
 
 Draw one quadrant per level of another variable and combine them — ideal for

@@ -28,4 +28,13 @@ quadrant satisf price, by(region) bysymbol(year) focus msize(*1.6) ///
     bycolors(North=navy South=forest_green East=orange West=gs7) ///
     sbsymbols(T O)
 
+* COLOUR FOLLOWS THE PANEL: put the SAME variable in by() and panel().
+* Each region's panel is drawn entirely in that region's colour; only the
+* symbol differs by year (2024 triangle, 2026 circle).
+* (e.g. with party data: by(party) panel(party) bysymbol(year) — every point
+*  in the "Blue" panel is blue, in the "Green" panel green, and so on.)
+quadrant satisf price, by(region) panel(region) bysymbol(year) msize(*2) ///
+    range(10 95) ///
+    bycolors(North=navy South=forest_green East=orange West=gs7) sbsymbols(T O)
+
 display as result "bysymbol example finished — see help quadrant."
