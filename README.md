@@ -100,9 +100,13 @@ positional list, e.g. `sbsymbols(Th T)`). The shared legend gains neutral grey
 keys for each level, and it works in `panel()` mode too:
 
 ```stata
-use quadrant_wave_demo.dta, clear     // bundled two-wave demo
-quadrant support nimby, panel(energy) by(party) bysymbol(wave) ///
-    mlabel(yr) bycolors(KMT=blue DPP=dkgreen TPP=ebblue Neutral=black)
+use quadrant_wave_demo.dta, clear     // bundled two-wave demo (2024 / 2026)
+quadrant support nimby, by(pid4) panel(energy) msize(*3) ///
+    xrange(10 85) yrange(10 90) ///
+    xtitle("鄰避率(%)", size(*1.2)) ytitle("支持率(%)", size(*1.2)) ///
+    title("不同能源類型的鄰避率與支持率(政黨)") ///
+    bycolors(泛藍=blue 泛綠=dkgreen 民眾黨=ebblue 無政黨傾向=black) ///
+    symbolby(y) sbsymbols(T O)
 ```
 
 > `symbolby()` still works as a backward-compatible alias for `bysymbol()`.
