@@ -18,12 +18,21 @@
 *!   meanlines          put the reference cross at the means of x and y
 *!                      instead of xline()/yline()
 *!   palette(string)    space-separated colors, one per group (positional)
-*!   colors(string)     explicit colour per group as value=colour pairs, e.g.
-*!                      colors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
+*!   bycolors(string)   explicit colour per by() group as value=colour pairs, e.g.
+*!                      bycolors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
+*!                      (colors() is kept as a backward-compatible alias)
 *!   msize(string)      marker size (default medium)
 *!   msymbol(string)    marker symbol for all groups (default O)
 *!   symbols(string)    explicit marker symbol per group as value=symbol pairs,
 *!                      e.g. symbols(KMT=D DPP=d TPP=O 中立無反應=o)
+*!   symbolby(varname)  SECOND grouping mapped to marker symbols: each level of
+*!                      this variable gets a different symbol while colour still
+*!                      follows by(). Default symbols: 1st level hollow circle
+*!                      (Oh), 2nd solid circle (O) — e.g. years 2024 vs 2026.
+*!                      Adds neutral grey legend keys for the levels.
+*!                      (overrides symbols()/hollow() for the markers)
+*!   sbsymbols(string)  symbol list for the symbolby() levels, positional,
+*!                      e.g. sbsymbols(Oh O) or sbsymbols(Th T)
 *!   mlabsize(string)   label size (default small)
 *!   title/xtitle/ytitle  passed through verbatim, so sub-options work, e.g.
 *!                        xtitle("NIMBY (%)", size(large))
@@ -41,8 +50,9 @@ program define quadrant
     syntax varlist(min=2 max=2 numeric) [if] [in] , ///
         [ by(varname) OVERALL MLABel(varname) HOLLOW(string) ///
           XLINE(real 50) YLINE(real 50) MEANlines FOCus ///
-          PALette(string) COLORS(string asis) ///
+          PALette(string) BYColors(string asis) COLORS(string asis) ///
           MSize(string) MSYMbol(string) SYMBOLS(string asis) MLABSize(string) ///
+          SYMBOLBy(varname) SBSYMbols(string) ///
           XRANGE(numlist min=2 max=2) YRANGE(numlist min=2 max=2) ///
           RANGE(numlist min=2 max=2) ASPect(string) ///
           PANel(varname) COLs(integer 0) ///
@@ -50,6 +60,10 @@ program define quadrant
           Legend(string asis) saving(string) name(string) NODRAW ]
 
     gettoken yv xv : varlist
+
+    * bycolors() is the documented name; colors() kept as backward-compatible alias
+    if `"`bycolors'"'=="" local bycolors `"`colors'"'
+    local colors `"`bycolors'"'
 
     * =====================================================
     * PANEL MODE: draw one quadrant per level of panel()
@@ -61,6 +75,7 @@ program define quadrant
         marksample ptouse, novarlist
         markout `ptouse' `xv'
         if "`by'"!=""     markout `ptouse' `by', strok
+        if "`symbolby'"!="" markout `ptouse' `symbolby', strok
         markout `ptouse' `panel', strok
         quietly levelsof `panel' if `ptouse', local(plevs)
         local np : word count `plevs'
@@ -84,6 +99,8 @@ program define quadrant
         if "`msize'"!=""    local opts `"`opts' msize(`msize')"'
         if "`msymbol'"!=""  local opts `"`opts' msymbol(`msymbol')"'
         if `"`symbols'"'!="" local opts `"`opts' symbols(`symbols')"'
+        if "`symbolby'"!=""  local opts `"`opts' symbolby(`symbolby')"'
+        if `"`sbsymbols'"'!="" local opts `"`opts' sbsymbols(`sbsymbols')"'
         if "`mlabsize'"!="" local opts `"`opts' mlabsize(`mlabsize')"'
         if "`aspect'"!=""   local opts `"`opts' aspect(`aspect')"'
         if "`palette'"!=""  local opts `"`opts' palette(`"`palette'"')"'
@@ -165,6 +182,28 @@ program define quadrant
                 local lplot `"`lplot' (scatteri . ., msymbol(`lsym') mcolor(`lc')) "'
                 local lord `lord' `ii' `"`glab'"'
             }
+            * neutral grey keys for the symbolby() levels (e.g. 24 hollow, 26 solid)
+            if "`symbolby'"!="" {
+                capture confirm string variable `symbolby'
+                local sbstr2 = (_rc==0)
+                quietly levelsof `symbolby' if `ptouse', local(sblv2)
+                local sbs2 `"`sbsymbols'"'
+                if `"`sbs2'"'=="" local sbs2 "Oh O Th T Dh D Sh S"
+                local kk = 0
+                foreach s of local sblv2 {
+                    local ++kk
+                    local ssym : word `kk' of `sbs2'
+                    if "`ssym'"=="" local ssym "O"
+                    if `sbstr2' local slab "`s'"
+                    else {
+                        local slab : label (`symbolby') `s'
+                        if `"`slab'"'=="" local slab "`s'"
+                    }
+                    local ++ii
+                    local lplot `"`lplot' (scatteri . ., msymbol(`ssym') mcolor(gs6)) "'
+                    local lord `lord' `ii' `"`slab'"'
+                }
+            }
             * default shared legend sits at the bottom; user legend() sub-options
             * (other than off) override the placement.
             if `"`legend'"'=="" | `"`legend'"'=="on" local leglg `"rows(1) position(12)"'
@@ -195,12 +234,22 @@ program define quadrant
     marksample touse
     markout `touse' `xv'
     if "`by'"!="" markout `touse' `by', strok
+    if "`symbolby'"!="" markout `touse' `symbolby', strok
 
     if "`msize'"==""    local msize "medium"
     if "`msymbol'"==""  local msymbol "O"
     if "`mlabsize'"=="" local mlabsize "small"
     if "`name'"==""     local name "quadrant"
     if "`legend'"==""   local legend "on"
+    * symbolby: a second grouping whose levels get different marker symbols
+    * (default sequence: 1st level hollow circle, 2nd solid circle, ...)
+    if "`symbolby'"!="" {
+        if `"`sbsymbols'"'=="" local sbsymbols "Oh O Th T Dh D Sh S"
+        capture confirm string variable `symbolby'
+        local sbstr = (_rc==0)
+        quietly levelsof `symbolby' if `touse', local(sblevs)
+        local nsb : word count `sblevs'
+    }
     * hollow variant of the chosen marker (O->Oh, D->Dh, S->Sh, T->Th, ...)
     if substr("`msymbol'", -1, 1)=="h" local hsym "`msymbol'"
     else                               local hsym "`msymbol'h"
@@ -298,14 +347,36 @@ program define quadrant
     if "`by'"=="" {
         * single colour
         local col : word 1 of `palette'
-        if `hasH' {
-            local plot `"(scatter `yv' `xv' if `touse' & !(`hcond'), msymbol(`msymbol') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
-            local plot `"`plot' (scatter `yv' `xv' if `touse' & `hcond', msymbol(`hsym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
+        if "`symbolby'"!="" {
+            * symbol encodes the second grouping; legend shows the level keys
+            local kk = 0
+            foreach s of local sblevs {
+                local ++kk
+                local ssym : word `kk' of `sbsymbols'
+                if "`ssym'"=="" local ssym "`msymbol'"
+                if `sbstr' {
+                    local scond `"`symbolby'=="`s'""'
+                    local slab "`s'"
+                }
+                else {
+                    local scond `"`symbolby'==`s'"'
+                    local slab : label (`symbolby') `s'
+                    if `"`slab'"'=="" local slab "`s'"
+                }
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `scond', msymbol(`ssym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local legord `legord' `kk' `"`slab'"'
+            }
         }
         else {
-            local plot `"(scatter `yv' `xv' if `touse', msymbol(`msymbol') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
+            if `hasH' {
+                local plot `"(scatter `yv' `xv' if `touse' & !(`hcond'), msymbol(`msymbol') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
+                local plot `"`plot' (scatter `yv' `xv' if `touse' & `hcond', msymbol(`hsym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
+            }
+            else {
+                local plot `"(scatter `yv' `xv' if `touse', msymbol(`msymbol') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
+            }
+            local legend "off"
         }
-        local legend "off"
     }
     else {
         capture confirm string variable `by'
@@ -352,7 +423,20 @@ program define quadrant
             }
             if substr("`gsym'",-1,1)=="h" local ghsym "`gsym'"
             else                          local ghsym "`gsym'h"
-            if `hasH' {
+            if "`symbolby'"!="" {
+                * symbol encodes the second grouping; colour stays the by-group's
+                local kk = 0
+                foreach s of local sblevs {
+                    local ++kk
+                    local ssym : word `kk' of `sbsymbols'
+                    if "`ssym'"=="" local ssym "`gsym'"
+                    if `sbstr' local scond `"`symbolby'=="`s'""'
+                    else       local scond `"`symbolby'==`s'"'
+                    local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & `scond', msymbol(`ssym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
+                }
+                local legord `legord' `=`i'*`nsb'' `"`glab'"'
+            }
+            else if `hasH' {
                 local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & !(`hcond'), msymbol(`gsym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
                 local n1 = `=2*`i'-1'
                 local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond' & `hcond', msymbol(`ghsym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
@@ -361,6 +445,23 @@ program define quadrant
             else {
                 local plot `"`plot' (scatter `yv' `xv' if `touse' & `gcond', msymbol(`gsym') msize(`msize') mcolor(`col') `mlab' mlabcolor(`col')) "'
                 local legord `legord' `i' `"`glab'"'
+            }
+        }
+        * neutral grey legend keys for the symbolby() levels (e.g. 24 hollow, 26 solid)
+        if "`symbolby'"!="" {
+            local base = `i'*`nsb'
+            local kk = 0
+            foreach s of local sblevs {
+                local ++kk
+                local ssym : word `kk' of `sbsymbols'
+                if "`ssym'"=="" local ssym "`msymbol'"
+                if `sbstr' local slab "`s'"
+                else {
+                    local slab : label (`symbolby') `s'
+                    if `"`slab'"'=="" local slab "`s'"
+                }
+                local plot `"`plot' (scatteri . ., msymbol(`ssym') msize(`msize') mcolor(gs6)) "'
+                local legord `legord' `=`base'+`kk'' `"`slab'"'
             }
         }
         * overall mean layer: one pooled black point per mlabel category

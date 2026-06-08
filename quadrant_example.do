@@ -52,7 +52,7 @@ quadrant support nimby, by(pid) mlabel(energy) aspect(1)
 *     Keys match the value label (or the raw level). Here pid is labelled
 *     Blue/Green/Other/White in the demo; map them to chosen colours.
 quadrant support nimby, by(pid) mlabel(energy) focus ///
-    colors(Blue=navy Green=forest_green Other=orange White=gs8)
+    bycolors(Blue=navy Green=forest_green Other=orange White=gs8)
 
 * 12) Legend behaves like twoway's legend(): move it, set columns, resize, off.
 quadrant support nimby, by(pid) mlabel(energy) focus ///
@@ -63,6 +63,31 @@ quadrant support nimby, by(pid) mlabel(energy) focus ///
 *     (D=large diamond, d=small diamond, O=large circle, o=small circle)
 quadrant support nimby, by(pid) mlabel(energy) focus ///
     symbols(Blue=D Green=d Other=O White=o) ///
-    colors(Blue=navy Green=forest_green Other=orange White=gs8)
+    bycolors(Blue=navy Green=forest_green Other=orange White=gs8)
+
+* 14) symbolby(): a SECOND grouping coded by marker SHAPE while colour still
+*     follows by(). Classic use: compare two survey waves — 2024 hollow circle,
+*     2026 solid circle. Build a 2-wave demo on the fly:
+preserve
+    expand 2
+    bysort pid energy: gen wave = cond(_n==1, 2024, 2026)
+    set seed 1
+    replace support = support + runiformint(-9, 9) if wave==2026
+    replace nimby   = nimby   + runiformint(-9, 9) if wave==2026
+    label define wavelbl 2024 "2024" 2026 "2026"
+    label values wave wavelbl
+    gen wlab = cond(wave==2024, "24", "26")     // short point labels
+
+    * single plot: colour = party, shape = wave (2024 hollow, 2026 solid)
+    quadrant support nimby, by(pid) symbolby(wave) mlabel(wlab) focus
+
+    * panel + grouping + symbolby (the full combination)
+    quadrant support nimby, panel(energy) by(pid) symbolby(wave) ///
+        mlabel(wlab) range(10 95) ///
+        bycolors(Blue=blue Green=dkgreen Other=orange White=black)
+
+    * customise the wave symbols if you prefer triangles, etc.
+    quadrant support nimby, by(pid) symbolby(wave) sbsymbols(Th T) focus
+restore
 
 display as result "quadrant tutorial finished — see help quadrant."

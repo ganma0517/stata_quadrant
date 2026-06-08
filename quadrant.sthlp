@@ -26,7 +26,7 @@
 {synoptline}
 {syntab:Grouping}
 {synopt:{opth by(varname)}}colour points by this group and add a legend{p_end}
-{synopt:{opt colors(string)}}explicit colour per group as {it:value=colour} pairs, e.g. {cmd:colors(KMT=blue DPP=green TPP=gs8)}{p_end}
+{synopt:{opt byc:olors(string)}}explicit colour per {opt by()} group as {it:value=colour} pairs, e.g. {cmd:bycolors(KMT=blue DPP=green TPP=gs8)} ({opt colors()} is a backward-compatible alias){p_end}
 {synopt:{opt overall}}also plot the overall (ungrouped) point set in black (with {opt by()}){p_end}
 
 {syntab:Labels and markers}
@@ -35,6 +35,8 @@
 {synopt:{opt msize(string)}}marker size; default {cmd:medium}{p_end}
 {synopt:{opt msymbol(string)}}marker symbol for all groups; default {cmd:O} (the hollow category uses the matching outline symbol){p_end}
 {synopt:{opt symbols(string)}}explicit marker symbol per group as {it:value=symbol} pairs, e.g. {cmd:symbols(KMT=D DPP=d TPP=O)}{p_end}
+{synopt:{opt symbolby(varname)}}a SECOND grouping mapped to marker symbols (colour still follows {opt by()}); default 1st level hollow circle, 2nd solid circle, e.g. years 2024 vs 2026{p_end}
+{synopt:{opt sbsymbols(string)}}symbol list for the {opt symbolby()} levels, positional, e.g. {cmd:sbsymbols(Oh O)} or {cmd:sbsymbols(Th T)}{p_end}
 {synopt:{opt mlabsize(string)}}label size; default {cmd:small}{p_end}
 
 {syntab:Reference cross}
@@ -50,7 +52,7 @@
 
 {syntab:Axes and titles}
 {synopt:{opt range(# #)}}axis range for both axes; default {cmd:0 100}{p_end}
-{synopt:{opt palette(string)}}colours, one per group (positional); see {opt colors()} for explicit mapping{p_end}
+{synopt:{opt palette(string)}}colours, one per group (positional); see {opt bycolors()} for explicit mapping{p_end}
 {synopt:{opt title(string)}}graph title; accepts sub-options, e.g. {cmd:title("Map", size(large))}{p_end}
 {synopt:{opt xtitle(string)} {opt ytitle(string)}}axis titles; accept sub-options, e.g. {cmd:xtitle("NIMBY (%)", size(large))}{p_end}
 {synopt:{opt aspect(string)}}aspect ratio (off by default); use {cmd:aspect(1)} for a square quadrant{p_end}
@@ -84,9 +86,10 @@ Three common modes: {bf:ungrouped} (omit {opt by()}, one colour); {bf:grouped}
 
 {phang}{opth by(varname)} colours points by group and adds a legend.
 
-{phang}{opt colors(string)} assigns an explicit colour to each group as a list
-of {it:value=colour} pairs, e.g.
-{cmd:colors(KMT=blue DPP=green TPP=gs8 中立無反應=black)}. The key may be the
+{phang}{opt bycolors(string)} assigns an explicit colour to each {opt by()} group
+as a list of {it:value=colour} pairs, e.g.
+{cmd:bycolors(KMT=blue DPP=green TPP=gs8 中立無反應=black)} ({opt colors()} still
+works as an alias). The key may be the
 group's value label or its raw level value (use the raw value when the label
 contains spaces); any group not listed falls back to the positional
 {opt palette()}. Use named colours (e.g. {cmd:blue}, {cmd:gs8}, {cmd:black}).
@@ -112,8 +115,20 @@ columns (default: auto). All other options (including {opt by()}, {opt mlabel()}
 {it:value=symbol} pairs, e.g. {cmd:symbols(KMT=D DPP=d TPP=O 中立無反應=o)}
 (D = large diamond, d = small diamond, O = large circle, o = small circle, ...).
 The key may be the group's value label or its raw value (use the raw value when
-the label contains spaces); groups not listed keep {opt msymbol()}. Pairs nicely
-with {opt colors()} for a colour- and shape-coded legend.
+the label contains spaces); groups not listed keep {opt msymbol()}.
+
+{phang}{opt symbolby(varname)} encodes a {it:second} grouping by marker
+{it:symbol} while colour continues to follow {opt by()}. By default the first
+level is drawn as a hollow circle and the second as a solid circle (e.g.
+{cmd:2024} hollow vs {cmd:2026} solid); customise with
+{opt sbsymbols()} (a positional symbol list, e.g. {cmd:sbsymbols(Th T)}). The
+shared legend gains neutral grey keys for each level. Works in single and
+{opt panel()} modes. Example:
+
+{phang2}{cmd:quadrant support nimby, by(party) panel(energy) symbolby(year) mlabel(yr2)}{p_end}
+
+{pmore}Pairs nicely
+with {opt bycolors()} for a colour- and shape-coded legend.
 
 {phang}{opt title()}, {opt xtitle()} and {opt ytitle()} are passed through to
 {cmd:twoway} verbatim, so any sub-option works inside them, e.g.

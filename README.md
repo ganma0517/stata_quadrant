@@ -56,17 +56,19 @@ quadrant support nimby, by(pid) mlabel(energy) hollow("Nuclear")
 quadrant support nimby, by(pid) overall mlabel(energy) hollow("Nuclear")
 ```
 
-## Assigning a colour to each group — `colors()`
+## Assigning a colour to each group — `bycolors()`
 
-Map specific groups to specific colours with `value=colour` pairs. The key can be
-the group's value label or its raw level value; any group you don't list keeps the
-default palette colour. Handy for party colours, e.g. KMT blue, DPP green, TPP grey,
-neutral/no-response black:
+Map specific `by()` groups to specific colours with `value=colour` pairs. The key
+can be the group's value label or its raw level value; any group you don't list
+keeps the default palette colour. Handy for party colours, e.g. KMT blue, DPP
+green, TPP grey, neutral/no-response black:
 
 ```stata
 quadrant support nimby, by(party) mlabel(issue) ///
-    colors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
+    bycolors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
 ```
+
+> `colors()` still works as a backward-compatible alias for `bycolors()`.
 
 ![colours by group](example_colors.png)
 
@@ -83,10 +85,26 @@ for a legend that is coded by both colour and shape:
 ```stata
 quadrant support nimby, by(party) mlabel(issue) ///
     symbols(KMT=D DPP=d TPP=O 中立無反應=o) ///
-    colors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
+    bycolors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
 ```
 
 ![symbols by group](example_symbols.png)
+
+## Encoding a second grouping by shape — `symbolby()`
+
+Use `symbolby(var2)` when you want **colour to mark one grouping (`by()`) and
+marker shape to mark a second** — the classic case is comparing two survey waves.
+By default the first level is a **hollow circle** and the second a **solid
+circle** (e.g. 2024 hollow, 2026 solid); customise with `sbsymbols()` (a
+positional list, e.g. `sbsymbols(Th T)`). The shared legend gains neutral grey
+keys for each level, and it works in `panel()` mode too:
+
+```stata
+quadrant support nimby, panel(energy) by(party) symbolby(year) ///
+    mlabel(yr2) bycolors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
+```
+
+![symbolby example](example_symbolby.png)
 
 ## Faceting with `panel()`
 
@@ -115,7 +133,9 @@ quadrant yvar xvar [if] [in] [, options]
 | Option | Description | Default |
 |---|---|---|
 | `by(varname)` | colour points by group + legend | — |
-| `colors()` | explicit colour per group, e.g. `colors(KMT=blue DPP=green TPP=gs8)` | — |
+| `bycolors()` | explicit colour per `by()` group, e.g. `bycolors(KMT=blue DPP=green TPP=gs8)` (alias: `colors()`) | — |
+| `symbolby(varname)` | second grouping coded by marker shape (e.g. 2024 hollow, 2026 solid) | — |
+| `sbsymbols()` | symbol list for `symbolby()` levels, e.g. `sbsymbols(Oh O)` | `Oh O …` |
 | `overall` | also plot pooled mean points (black) | off |
 | `mlabel(varname)` | point text labels | — |
 | `hollow(string)` | label value drawn with a hollow marker | — |
