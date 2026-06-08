@@ -26,7 +26,7 @@
 {synoptline}
 {syntab:Grouping}
 {synopt:{opth by(varname)}}colour points by this group and add a legend{p_end}
-{synopt:{opt byc:olors(string)}}explicit colour per {opt by()} group as {it:value=colour} pairs, e.g. {cmd:bycolors(KMT=blue DPP=green TPP=gs8)} ({opt colors()} is a backward-compatible alias){p_end}
+{synopt:{opt byc:olors(string)}}explicit colour per {opt by()} group as {it:value=colour} pairs, e.g. {cmd:bycolors(North=navy South=forest_green East=orange)} ({opt colors()} is a backward-compatible alias){p_end}
 {synopt:{opt overall}}also plot the overall (ungrouped) point set in black (with {opt by()}){p_end}
 
 {syntab:Labels and markers}
@@ -34,7 +34,7 @@
 {synopt:{opt hollow(string)}}value of {opt mlabel()} drawn with a hollow marker{p_end}
 {synopt:{opt msize(string)}}marker size; default {cmd:medium}{p_end}
 {synopt:{opt msymbol(string)}}marker symbol for all groups; default {cmd:O} (the hollow category uses the matching outline symbol){p_end}
-{synopt:{opt symbols(string)}}explicit marker symbol per group as {it:value=symbol} pairs, e.g. {cmd:symbols(KMT=D DPP=d TPP=O)}{p_end}
+{synopt:{opt symbols(string)}}explicit marker symbol per group as {it:value=symbol} pairs, e.g. {cmd:symbols(North=O South=D East=S)}{p_end}
 {synopt:{opt bysym:bol(varname)}}a SECOND grouping mapped to marker symbols (colour still follows {opt by()}); default 1st level hollow circle, 2nd solid circle, e.g. years 2024 vs 2026 ({opt symbolby()} is a backward-compatible alias){p_end}
 {synopt:{opt sbsymbols(string)}}symbol list for the {opt bysymbol()} levels, positional, e.g. {cmd:sbsymbols(Oh O)} or {cmd:sbsymbols(Th T)}{p_end}
 {synopt:{opt mlabsize(string)}}label size; default {cmd:small}{p_end}
@@ -54,7 +54,7 @@
 {synopt:{opt range(# #)}}axis range for both axes; default {cmd:0 100}{p_end}
 {synopt:{opt palette(string)}}colours, one per group (positional); see {opt bycolors()} for explicit mapping{p_end}
 {synopt:{opt title(string)}}graph title; accepts sub-options, e.g. {cmd:title("Map", size(large))}{p_end}
-{synopt:{opt xtitle(string)} {opt ytitle(string)}}axis titles; accept sub-options, e.g. {cmd:xtitle("NIMBY (%)", size(large))}{p_end}
+{synopt:{opt xtitle(string)} {opt ytitle(string)}}axis titles; accept sub-options, e.g. {cmd:xtitle("Price sensitivity (%)", size(large))}{p_end}
 {synopt:{opt aspect(string)}}aspect ratio (off by default); use {cmd:aspect(1)} for a square quadrant{p_end}
 {synopt:{opt legend(string)}}{cmd:off}, or any {help legend_options:legend()} sub-options, e.g. {cmd:legend(position(3) cols(1))}{p_end}
 
@@ -88,7 +88,7 @@ Three common modes: {bf:ungrouped} (omit {opt by()}, one colour); {bf:grouped}
 
 {phang}{opt bycolors(string)} assigns an explicit colour to each {opt by()} group
 as a list of {it:value=colour} pairs, e.g.
-{cmd:bycolors(KMT=blue DPP=green TPP=gs8 中立無反應=black)} ({opt colors()} still
+{cmd:bycolors(North=navy South=forest_green East=orange West=gs7)} ({opt colors()} still
 works as an alias). The key may be the
 group's value label or its raw level value (use the raw value when the label
 contains spaces); any group not listed falls back to the positional
@@ -112,7 +112,7 @@ columns (default: auto). All other options (including {opt by()}, {opt mlabel()}
 {opt msize()} sets the marker size.
 
 {phang}{opt symbols(string)} assigns a marker symbol to specific groups as
-{it:value=symbol} pairs, e.g. {cmd:symbols(KMT=D DPP=d TPP=O 中立無反應=o)}
+{it:value=symbol} pairs, e.g. {cmd:symbols(North=O South=D East=S West=T)}
 (D = large diamond, d = small diamond, O = large circle, o = small circle, ...).
 The key may be the group's value label or its raw value (use the raw value when
 the label contains spaces); groups not listed keep {opt msymbol()}.
@@ -125,14 +125,14 @@ level is drawn as a hollow circle and the second as a solid circle (e.g.
 shared legend gains neutral grey keys for each level. Works in single and
 {opt panel()} modes. Example:
 
-{phang2}{cmd:quadrant support nimby, by(party) panel(energy) bysymbol(year) mlabel(yr2)}{p_end}
+{phang2}{cmd:quadrant satisf price, by(region) panel(product) bysymbol(year)}{p_end}
 
 {pmore}Pairs nicely
 with {opt bycolors()} for a colour- and shape-coded legend.
 
 {phang}{opt title()}, {opt xtitle()} and {opt ytitle()} are passed through to
 {cmd:twoway} verbatim, so any sub-option works inside them, e.g.
-{cmd:xtitle("NIMBY (%)", size(large))} or {cmd:title("Map", size(large) color(navy))}.
+{cmd:xtitle("Price sensitivity (%)", size(large))} or {cmd:title("Map", size(large) color(navy))}.
 {opt aspect()} is off by default so a title leaves no side gaps; pass
 {opt aspect(1)} for a square quadrant.
 
@@ -152,22 +152,22 @@ In a faceted figure the legend is shared once at the bottom by default.
 {phang2}{cmd:. use "https://raw.githubusercontent.com/ganma0517/stata_quadrant/main/quadrant_demo.dta", clear}{p_end}
 
 {pstd}Grouped, labelled, one category hollow{p_end}
-{phang2}{cmd:. quadrant support nimby, by(pid) mlabel(energy) hollow("Nuclear")}{p_end}
+{phang2}{cmd:. quadrant satisf price if year==2024, by(region) mlabel(product) hollow("Delta")}{p_end}
 
 {pstd}Ungrouped (single colour){p_end}
-{phang2}{cmd:. quadrant support nimby, mlabel(energy) hollow("Nuclear")}{p_end}
+{phang2}{cmd:. quadrant satisf price if year==2024, mlabel(product) hollow("Delta")}{p_end}
 
 {pstd}Grouped plus the pooled overall point set{p_end}
-{phang2}{cmd:. quadrant support nimby, by(pid) overall mlabel(energy) hollow("Nuclear")}{p_end}
+{phang2}{cmd:. quadrant satisf price if year==2024, by(region) overall mlabel(product) hollow("Delta")}{p_end}
 
 {pstd}Reference cross at the data means{p_end}
-{phang2}{cmd:. quadrant support nimby, by(pid) meanlines}{p_end}
+{phang2}{cmd:. quadrant satisf price if year==2024, by(region) meanlines}{p_end}
 
-{pstd}Faceted: one quadrant per party, points labelled by energy source{p_end}
-{phang2}{cmd:. quadrant support nimby, panel(party) mlabel(energy) meanlines}{p_end}
+{pstd}Faceted: one quadrant per region, points labelled by product{p_end}
+{phang2}{cmd:. quadrant satisf price if year==2024, panel(region) mlabel(product) meanlines}{p_end}
 
-{pstd}Faceted and grouped: one quadrant per energy source, coloured by party{p_end}
-{phang2}{cmd:. quadrant support nimby, panel(energy) by(party) range(40 90)}{p_end}
+{pstd}Faceted and grouped: one quadrant per product, coloured by region{p_end}
+{phang2}{cmd:. quadrant satisf price if year==2024, panel(product) by(region) range(10 95)}{p_end}
 
 
 {marker author}{...}

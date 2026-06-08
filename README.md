@@ -35,37 +35,38 @@ do quadrant_example.do
 
 ## Quick start
 
-A practice dataset is included — **fictional** support (%) vs NIMBY (%) for four
-energy types across four party blocs (no real-world source):
+A small **fictional** practice dataset is bundled (no real-world source):
+`satisf` (Satisfaction %) vs `price` (Price sensitivity %) for four products
+(`Alpha`–`Delta`) across four regions (`North`–`West`), in two waves (`year`
+2024/2026).
 
 ```stata
 use "https://raw.githubusercontent.com/ganma0517/stata_quadrant/main/quadrant_demo.dta", clear
-quadrant support nimby, by(pid) mlabel(energy) hollow("Nuclear")
+quadrant satisf price if year==2024, by(region) mlabel(product) hollow("Delta")
 ```
 
 ## Three modes
 
 ```stata
 * ungrouped (single colour)
-quadrant support nimby, mlabel(energy) hollow("Nuclear")
+quadrant satisf price if year==2024, mlabel(product) hollow("Delta")
 
 * grouped (one colour per group + legend)
-quadrant support nimby, by(pid) mlabel(energy) hollow("Nuclear")
+quadrant satisf price if year==2024, by(region) mlabel(product) hollow("Delta")
 
 * grouped + pooled overall mean point set (black)
-quadrant support nimby, by(pid) overall mlabel(energy) hollow("Nuclear")
+quadrant satisf price if year==2024, by(region) overall mlabel(product) hollow("Delta")
 ```
 
 ## Assigning a colour to each group — `bycolors()`
 
 Map specific `by()` groups to specific colours with `value=colour` pairs. The key
 can be the group's value label or its raw level value; any group you don't list
-keeps the default palette colour. Handy for party colours, e.g. KMT blue, DPP
-green, TPP grey, neutral/no-response black:
+keeps the default palette colour:
 
 ```stata
-quadrant support nimby, by(party) mlabel(issue) ///
-    bycolors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
+quadrant satisf price if year==2024, by(region) mlabel(product) ///
+    bycolors(North=navy South=forest_green East=orange West=gs7)
 ```
 
 > `colors()` still works as a backward-compatible alias for `bycolors()`.
@@ -77,15 +78,15 @@ The same mapping is used consistently across faceted panels and in the shared le
 ## Assigning a marker shape to each group — `symbols()`
 
 Map specific groups to specific marker symbols with `value=symbol` pairs (same
-key rules as `colors()`). Stata symbols include `O`/`o` (large/small circle),
+key rules as `bycolors()`). Stata symbols include `O`/`o` (large/small circle),
 `D`/`d` (large/small diamond), `T`/`t` (triangle), `S`/`s` (square). The hollow
-category automatically uses the matching outline symbol. Combine with `colors()`
+category automatically uses the matching outline symbol. Combine with `bycolors()`
 for a legend that is coded by both colour and shape:
 
 ```stata
-quadrant support nimby, by(party) mlabel(issue) ///
-    symbols(KMT=D DPP=d TPP=O 中立無反應=o) ///
-    bycolors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
+quadrant satisf price if year==2024, by(region) mlabel(product) ///
+    symbols(North=O South=D East=S West=T) ///
+    bycolors(North=navy South=forest_green East=orange West=gs7)
 ```
 
 ![symbols by group](example_symbols.png)
@@ -95,18 +96,15 @@ quadrant support nimby, by(party) mlabel(issue) ///
 Use `bysymbol(var2)` when you want **colour to mark one grouping (`by()`) and
 marker shape to mark a second** — the classic case is comparing two survey waves.
 By default the first level is a **hollow circle** and the second a **solid
-circle** (e.g. 2024 hollow, 2026 solid); customise with `sbsymbols()` (a
-positional list, e.g. `sbsymbols(Th T)`). The shared legend gains neutral grey
-keys for each level, and it works in `panel()` mode too:
+circle**; customise with `sbsymbols()` (a positional list, e.g. `sbsymbols(T O)`
+for triangle then circle). The shared legend gains neutral grey keys for each
+level, and it works in `panel()` mode too:
 
 ```stata
-use quadrant_wave_demo.dta, clear     // bundled two-wave demo (2024 / 2026)
-quadrant support nimby, by(pid4) panel(energy) msize(*3) ///
-    xrange(10 85) yrange(10 90) ///
-    xtitle("鄰避率(%)", size(*1.2)) ytitle("支持率(%)", size(*1.2)) ///
-    title("不同能源類型的鄰避率與支持率(政黨)") ///
-    bycolors(泛藍=blue 泛綠=dkgreen 民眾黨=ebblue 無政黨傾向=black) ///
-    symbolby(y) sbsymbols(T O)
+use quadrant_demo.dta, clear          // bundled demo has waves 2024 / 2026
+quadrant satisf price, by(region) panel(product) bysymbol(year) msize(*2) ///
+    range(10 95) sbsymbols(T O) ///
+    bycolors(North=navy South=forest_green East=orange West=gs7)
 ```
 
 > `symbolby()` still works as a backward-compatible alias for `bysymbol()`.
@@ -117,17 +115,17 @@ quadrant support nimby, by(pid4) panel(energy) msize(*3) ///
 ## Faceting with `panel()`
 
 Draw one quadrant per level of another variable and combine them — ideal for
-comparing the same positioning map across blocs, sources, time points, etc.
+comparing the same positioning map across groups, items, time points, etc.
 When the points are grouped with `by()`, the faceted figure gets a **single
 shared legend** at the bottom (6 o'clock) instead of one legend per panel.
 
 ```stata
-* one quadrant per party, points labelled by energy source
+* one quadrant per region, points labelled by product
 * (focus zooms each panel to its own data so points are easy to read)
-quadrant support nimby, panel(party) mlabel(energy) meanlines focus
+quadrant satisf price if year==2024, panel(region) mlabel(product) meanlines focus
 
-* faceted and grouped: one quadrant per energy source, coloured by party
-quadrant support nimby, panel(energy) by(party) range(30 90)
+* faceted and grouped: one quadrant per product, coloured by region
+quadrant satisf price if year==2024, panel(product) by(region) range(10 95)
 ```
 
 ![panel example](example_panel_group.png)
@@ -141,7 +139,7 @@ quadrant yvar xvar [if] [in] [, options]
 | Option | Description | Default |
 |---|---|---|
 | `by(varname)` | colour points by group + legend | — |
-| `bycolors()` | explicit colour per `by()` group, e.g. `bycolors(KMT=blue DPP=green TPP=gs8)` (alias: `colors()`) | — |
+| `bycolors()` | explicit colour per `by()` group, e.g. `bycolors(North=navy South=forest_green)` (alias: `colors()`) | — |
 | `bysymbol(varname)` | second grouping coded by marker shape (e.g. 2024 hollow, 2026 solid); alias `symbolby()` | — |
 | `sbsymbols()` | symbol list for `bysymbol()` levels, e.g. `sbsymbols(Oh O)` | `Oh O …` |
 | `overall` | also plot pooled mean points (black) | off |
@@ -156,7 +154,7 @@ quadrant yvar xvar [if] [in] [, options]
 | `xrange(# #)` `yrange(# #)` | set each axis range separately | — |
 | `palette()` | colours, one per group (positional) | — |
 | `msize()` `msymbol()` | marker size / symbol (all groups) | medium / `O` |
-| `symbols()` | explicit marker symbol per group, e.g. `symbols(KMT=D DPP=d TPP=O)` | — |
+| `symbols()` | explicit marker symbol per group, e.g. `symbols(North=O South=D East=S)` | — |
 | `mlabsize()` | point-label size | small |
 | `title()` `xtitle()` `ytitle()` | titles (accept sub-options, e.g. `size()`) | — |
 | `aspect()` | aspect ratio (use `aspect(1)` for square) | off |
@@ -170,10 +168,10 @@ See `help quadrant` for full documentation and examples.
 - `quadrant.ado` — the command
 - `quadrant.sthlp` — Stata help file
 - `quadrant_example.do` — runnable tutorial
+- `quadrant_means_example.do` — overall / group / both means
 - `quadrant_bysymbol_example.do` — runnable `bysymbol()` (colour × shape) example
-- `quadrant_demo.dta` — practice data (fictional, long format)
-- `quadrant_wave_demo.dta` — two-wave practice data for `bysymbol()` (2024 / 2026)
-- `example_quadrant.png` — demo figure
+- `quadrant_demo.dta` — practice data (fictional): region × product × year (2024/2026)
+- `example_*.png` — demo figures
 - `quadrant.pkg`, `stata.toc` — package metadata for `net install`
 
 ## About the author

@@ -1,26 +1,28 @@
 *===============================================================*
 * quadrant — three "mean" presentations
-* Using the bundled practice data (support % vs NIMBY % by energy & party).
+* Bundled practice data (fictional): satisf (%) vs price (%)
+* by region (colour) and product (facet/label). Uses the 2024 wave.
 *===============================================================*
 clear all
 set more off
 use "https://raw.githubusercontent.com/ganma0517/stata_quadrant/main/quadrant_demo.dta", clear
+keep if year==2024
 
-* 1) OVERALL MEANS — one averaged point per energy type
-*    (pool across parties first, then plot ungrouped)
+* 1) OVERALL MEANS — one averaged point per product
+*    (pool across regions first, then plot ungrouped)
 preserve
-    collapse (mean) support nimby, by(energy)
-    quadrant support nimby, mlabel(energy) hollow("Nuclear") focus ///
-        title("1. Overall means (by energy)")
+    collapse (mean) satisf price, by(product)
+    quadrant satisf price, mlabel(product) hollow("Delta") focus ///
+        title("1. Overall means (by product)")
 restore
 
-* 2) GROUP MEANS — one point per party x energy, coloured by party
-quadrant support nimby, by(pid) mlabel(energy) hollow("Nuclear") focus ///
-    title("2. Group means (by party)")
+* 2) GROUP MEANS — one point per region x product, coloured by region
+quadrant satisf price, by(region) mlabel(product) hollow("Delta") focus ///
+    title("2. Group means (by region)")
 
 * 3) OVERALL + GROUP MEANS — coloured group points plus a black
-*    overall-mean point per energy (overall does the pooling for you)
-quadrant support nimby, by(pid) overall mlabel(energy) hollow("Nuclear") focus ///
+*    overall-mean point per product (overall does the pooling for you)
+quadrant satisf price, by(region) overall mlabel(product) hollow("Delta") focus ///
     title("3. Overall + group means")
 
 display as result "quadrant means examples finished."

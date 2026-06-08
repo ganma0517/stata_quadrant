@@ -1,62 +1,70 @@
-*! quadrant v1.0  2Jun2026
-*! Quadrant (scatter) plot: points coloured by group, with a central
-*! cross of reference lines splitting the plane into four quadrants,
-*! optional point labels, and an optional "hollow" category.
+*! quadrant v1.1  8Jun2026
+*! Quadrant (scatter) plot: a 2-D positioning map split into four quadrants by a
+*! central reference cross. Points can be coloured by one grouping, shaped by a
+*! second grouping, labelled, faceted into small multiples, and reduced to means.
 *!
 *! Syntax:
 *!   quadrant yvar xvar [if] [in] [ , options ]
 *!
-*! Options:
-*!   by(varname)        colour points by this group; adds a legend
-*!   overall            also plot the overall (ungrouped) mean point set
-*!                      (only with by(); drawn in black)
-*!   mlabel(varname)    text label for each point
-*!   hollow(string)     value of mlabel() drawn with a hollow marker
-*!                      (e.g. hollow("Nuclear"))
-*!   xline(#)           vertical reference line (default 50)
-*!   yline(#)           horizontal reference line (default 50)
-*!   meanlines          put the reference cross at the means of x and y
-*!                      instead of xline()/yline()
-*!   palette(string)    space-separated colors, one per group (positional)
-*!   bycolors(string)   explicit colour per by() group as value=colour pairs, e.g.
-*!                      bycolors(KMT=blue DPP=green TPP=gs8 中立無反應=black)
+*! ---- grouping & colour ----
+*!   by(varname)        colour points by this group (adds a legend)
+*!   bycolors(string)   explicit colour per by() group, as value=colour pairs,
+*!                      e.g. bycolors(North=navy South=forest_green West=gs7)
 *!                      (colors() is kept as a backward-compatible alias)
-*!   msize(string)      marker size (default medium)
-*!   msymbol(string)    marker symbol for all groups (default O)
-*!   symbols(string)    explicit marker symbol per group as value=symbol pairs,
-*!                      e.g. symbols(KMT=D DPP=d TPP=O 中立無反應=o)
-*!   bysymbol(varname)  SECOND grouping mapped to marker symbols: each level of
-*!                      this variable gets a different symbol while colour still
-*!                      follows by(). Default symbols: 1st level hollow circle
-*!                      (Oh), 2nd solid circle (O) — e.g. years 2024 vs 2026.
-*!                      Adds neutral grey legend keys for the levels.
-*!                      (symbolby() is kept as a backward-compatible alias)
+*!   palette(string)    space-separated colours, one per group (positional)
+*!
+*! ---- second grouping, by marker shape ----
+*!   bysymbol(varname)  a SECOND grouping mapped to marker shapes while colour
+*!                      still follows by(). Default: 1st level hollow circle,
+*!                      2nd solid circle (e.g. waves 2024 vs 2026). Adds neutral
+*!                      grey legend keys. (symbolby() is a backward-compat alias)
 *!   sbsymbols(string)  symbol list for the bysymbol() levels, positional,
-*!                      e.g. sbsymbols(Oh O) or sbsymbols(Th T)
+*!                      e.g. sbsymbols(Oh O) or sbsymbols(T O)
+*!
+*! ---- markers & point labels ----
+*!   msymbol(string)    marker symbol for all groups (default O)
+*!   msize(string)      marker size (default medium)
+*!   symbols(string)    explicit marker symbol per by() group, value=symbol pairs
+*!   mlabel(varname)    text label for each point
 *!   mlabsize(string)   label size (default small)
-*!   title/xtitle/ytitle  passed through verbatim, so sub-options work, e.g.
-*!                        xtitle("NIMBY (%)", size(large))
-*!   aspect(string)     aspect ratio (off by default; aspect(1) = square)
+*!   hollow(string)     value of mlabel() drawn with a hollow marker
+*!
+*! ---- reference cross & means ----
+*!   xline(#) yline(#)  reference-line positions (default 50 / 50)
+*!   meanlines          put the cross at the means of x and y instead
+*!   overall            also plot the pooled overall-mean point set (black;
+*!                      requires by())
+*!
+*! ---- axes & layout ----
 *!   range(# #)         axis range for both axes (default 0 100)
-*!   panel(varname)     facet: draw one quadrant per level and combine them
+*!   xrange(# #) yrange(# #)  set each axis range separately
+*!   focus              auto-zoom the axes tightly to the data
+*!   aspect(string)     aspect ratio (off by default; aspect(1) = square)
+*!
+*! ---- faceting (small multiples) ----
+*!   panel(varname)     draw one quadrant per level and combine them
 *!   cols(#)            number of columns when faceting (default: auto)
-*!   xtitle ytitle title(string)
-*!   legend(string)     "off", or any twoway legend() sub-options, e.g.
-*!                      legend(position(3) cols(1) size(small))
-*!   saving(string) name(string)
+*!
+*! ---- titles, legend, output ----
+*!   title() xtitle() ytitle()  passed through verbatim (sub-options work)
+*!   legend(string)     "off", or any twoway legend() sub-options
+*!   saving(string) name(string) nodraw
 
 program define quadrant
     version 16.0
-    syntax varlist(min=2 max=2 numeric) [if] [in] , ///
-        [ by(varname) OVERALL MLABel(varname) HOLLOW(string) ///
-          XLINE(real 50) YLINE(real 50) MEANlines FOCus ///
-          PALette(string) BYColors(string asis) COLORS(string asis) ///
-          MSize(string) MSYMbol(string) SYMBOLS(string asis) MLABSize(string) ///
-          BYSYMbol(varname) SYMBOLBy(varname) SBSYMbols(string) ///
-          XRANGE(numlist min=2 max=2) YRANGE(numlist min=2 max=2) ///
-          RANGE(numlist min=2 max=2) ASPect(string) ///
-          PANel(varname) COLs(integer 0) ///
-          title(string asis) XTITle(string asis) YTITle(string asis) ///
+    syntax varlist(min=2 max=2 numeric) [if] [in] ,                     ///
+        [                                                               ///
+          by(varname) BYColors(string asis) COLORS(string asis)         /// grouping & colour
+          PALette(string)                                               ///
+          BYSYMbol(varname) SYMBOLBy(varname) SBSYMbols(string)         /// second grouping by shape
+          MSize(string) MSYMbol(string) SYMBOLS(string asis)            /// markers
+          MLABel(varname) MLABSize(string) HOLLOW(string)               /// point labels
+          XLINE(real 50) YLINE(real 50) MEANlines OVERALL               /// reference cross & means
+          RANGE(numlist min=2 max=2)                                    ///
+          XRANGE(numlist min=2 max=2) YRANGE(numlist min=2 max=2)       /// axes
+          FOCus ASPect(string)                                          ///
+          PANel(varname) COLs(integer 0)                                /// faceting
+          title(string asis) XTITle(string asis) YTITle(string asis)    /// titles
           Legend(string asis) saving(string) name(string) NODRAW ]
 
     gettoken yv xv : varlist
@@ -396,7 +404,7 @@ program define quadrant
                 if `"`glab'"'=="" local glab "`g'"
             }
             * colour: explicit colors("group=colour" ...) mapping wins; the
-            * key may be the value label (e.g. KMT) or the raw level value.
+            * key may be the value label (e.g. North) or the raw level value.
             * Otherwise fall back to the positional palette().
             local col : word `i' of `palette'
             if `"`colors'"'!="" {
@@ -520,7 +528,7 @@ program define quadrant
 
     * Axis titles and main title are passed through verbatim, so the user can
     * add any twoway sub-option inside them, e.g.
-    *   xtitle("NIMBY (%)", size(large))   ytitle("Support (%)", size(large))
+    *   xtitle("Price sensitivity (%)", size(large))   ytitle("Satisfaction (%)", size(large))
     *   title("My map", size(large) color(navy))
     * When an axis title is omitted, fall back to the variable label (quoted).
     if `"`xtitle'"'!="" local xtopt `"xtitle(`xtitle')"'
