@@ -1,4 +1,4 @@
-*! quadrant v1.1  8Jun2026
+*! quadrant v1.2  8Jun2026
 *! Quadrant (scatter) plot: a 2-D positioning map split into four quadrants by a
 *! central reference cross. Points can be coloured by one grouping, shaped by a
 *! second grouping, labelled, faceted into small multiples, and reduced to means.
@@ -44,6 +44,9 @@
 *! ---- faceting (small multiples) ----
 *!   panel(varname)     draw one quadrant per level and combine them
 *!   cols(#)            number of columns when faceting (default: auto)
+*!   panelcolor         colour each panel by its own panel value (every point in
+*!                      a panel takes that panel's colour); pair with bysymbol()
+*!                      so only the marker shape varies within a panel
 *!
 *! ---- titles, legend, output ----
 *!   title() xtitle() ytitle()  passed through verbatim (sub-options work)
@@ -63,7 +66,7 @@ program define quadrant
           RANGE(numlist min=2 max=2)                                    ///
           XRANGE(numlist min=2 max=2) YRANGE(numlist min=2 max=2)       /// axes
           FOCus ASPect(string)                                          ///
-          PANel(varname) COLs(integer 0)                                /// faceting
+          PANel(varname) COLs(integer 0) PANELColor                     /// faceting
           title(string asis) XTITle(string asis) YTITle(string asis)    /// titles
           Legend(string asis) saving(string) name(string) NODRAW ]
 
@@ -81,6 +84,9 @@ program define quadrant
     * =====================================================
     if "`panel'" != "" {
         if "`name'"=="" local name "quadrant"
+        * panelcolor: colour each panel by its own panel value (every point in a
+        * panel takes that panel's colour). Implemented by colouring with by(panel).
+        if "`panelcolor'"!="" & "`by'"=="" local by "`panel'"
         tempvar ptouse
         marksample ptouse, novarlist
         markout `ptouse' `xv'

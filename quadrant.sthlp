@@ -48,6 +48,7 @@
 
 {syntab:Faceting}
 {synopt:{opth panel(varname)}}draw one quadrant per level of this variable and combine them{p_end}
+{synopt:{opt panelcolor}}colour each panel by its own panel value (pair with {opt bysymbol()}){p_end}
 {synopt:{opt cols(#)}}number of columns when faceting (default: auto){p_end}
 
 {syntab:Axes and titles}
@@ -106,6 +107,12 @@ points whose label equals that value with a hollow marker.
 and combines them into a single faceted graph; {opt cols(#)} sets the number of
 columns (default: auto). All other options (including {opt by()}, {opt mlabel()},
 {opt meanlines}, {opt range()}) apply within each panel.
+
+{phang}{opt panelcolor} colours each panel by its own panel value, so every point
+in a panel takes that panel's colour. Pair it with {opt bysymbol()} so that only
+the marker shape varies within a panel (e.g. one panel per group, 2024 triangles
+and 2026 circles, all in the group's colour). Equivalent to putting the same
+variable in both {opt by()} and {opt panel()}.
 
 {phang}{opt msymbol(string)} sets the marker symbol for all groups (default
 {cmd:O}); the hollow category automatically uses the matching outline symbol.

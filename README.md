@@ -117,17 +117,21 @@ quadrant satisf price, by(region) panel(product) bysymbol(year) msize(*2) ///
 
 ![bysymbol example](example_symbolby.png)
 
-### Colour follows the panel
+### Colour follows the panel — `panelcolor`
 
 To make **each panel entirely one colour** (e.g. one panel per party, every
 point in that panel drawn in the party's colour, with only the *symbol*
-differing by year), put the **same variable in both `by()` and `panel()`** and
-map the year to shape with `bysymbol()`:
+differing by year), add the **`panelcolor`** option and map the year to shape
+with `bysymbol()`:
 
 ```stata
-quadrant satisf price, by(region) panel(region) bysymbol(year) ///
+quadrant satisf price, panel(region) panelcolor bysymbol(year) ///
     bycolors(North=navy South=forest_green East=orange West=gs7) sbsymbols(T O)
 ```
+
+Here the North panel is all navy, South all green, etc.; within each panel the
+2024 points are triangles and 2026 points are circles. (Equivalent to putting
+the same variable in both `by()` and `panel()`.)
 
 ![colour follows panel](example_symbolby_panelcolor.png)
 
@@ -168,6 +172,7 @@ quadrant yvar xvar [if] [in] [, options]
 | `meanlines` | put the cross at the data means | off |
 | `focus` | auto-zoom axes to the data (tidy ticks) | off |
 | `panel(varname)` | facet: one quadrant per level, combined | — |
+| `panelcolor` | colour each panel by its own panel value (pair with `bysymbol()`) | off |
 | `cols(#)` | columns when faceting | auto |
 | `range(# #)` | axis range (both axes) | 0 100 |
 | `xrange(# #)` `yrange(# #)` | set each axis range separately | — |
