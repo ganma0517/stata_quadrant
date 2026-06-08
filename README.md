@@ -95,6 +95,11 @@ quadrant satisf price if year==2024, by(region) mlabel(product) ///
 
 Use `bysymbol(var2)` when you want **colour to mark one grouping (`by()`) and
 marker shape to mark a second** — the classic case is comparing two survey waves.
+
+> **Role split:** `by()` controls **colour**, `bysymbol()` controls **shape**.
+> Put *different* variables in each. (If you put the same variable, e.g. the year,
+> in both, colour and shape will both track it.) So for "colour by group, only the
+> symbol differs by year": `by(group) bysymbol(year)`.
 By default the first level is a **hollow circle** and the second a **solid
 circle**; customise with `sbsymbols()` (a positional list, e.g. `sbsymbols(T O)`
 for triangle then circle). The shared legend gains neutral grey keys for each

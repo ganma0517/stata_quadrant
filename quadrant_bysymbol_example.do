@@ -1,7 +1,12 @@
 *------------------------------------------------------------------*
 * quadrant_bysymbol_example.do
-* Demonstrates bysymbol(): colour marks one grouping (by(), here region)
-* and marker SHAPE marks a second (here the survey wave, year).
+* Two groupings on one map:
+*   by(...)       -> COLOUR   (here region: each region a colour)
+*   bysymbol(...) -> SHAPE    (here year:   2024 vs 2026)
+* Put DIFFERENT variables in by() and bysymbol(). If you accidentally
+* put the same variable (e.g. year) in BOTH, colour and shape will both
+* track that variable — which is usually not what you want.
+*
 * Bundled fictional data quadrant_demo.dta:
 *   region 1-4 North/South/East/West ; product Alpha/Beta/Gamma/Delta
 *   year 2024 / 2026 ; satisf (y) ; price (x)
@@ -10,7 +15,7 @@
 *   use "https://raw.githubusercontent.com/ganma0517/stata_quadrant/main/quadrant_demo.dta", clear
 use quadrant_demo.dta, clear
 
-* Faceted by product, colour = region, shape = wave
+* Faceted by product: within each panel, COLOUR = region, SHAPE = year.
 * sbsymbols(T O) -> 2024 triangle, 2026 circle ; larger markers via msize(*2)
 quadrant satisf price, by(region) panel(product) bysymbol(year) msize(*2) ///
     range(10 95) ///
